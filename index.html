@@ -1,0 +1,1936 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Roblox Dev Learning</title>
+<style>
+:root{
+    --bg1:#020617;
+    --bg2:#0f172a;
+    --card:#111827;
+    --text:#e2e8f0;
+    --muted:#94a3b8;
+    --line:#1e293b;
+    --accent:#38bdf8;
+    --accent2:#9333ea;
+    --glow: rgba(56, 189, 248, 0.4);
+    --shadow:0 20px 50px rgba(0,0,0,.35);
+}
+
+body[data-theme="light"]{
+    --bg1:#eff6ff;
+    --bg2:#dbeafe;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#475569;
+    --line:#cbd5e1;
+    --accent:#2563eb;
+    --accent2:#7c3aed;
+    --glow: rgba(37, 99, 235, 0.3);
+    --shadow:0 20px 50px rgba(0,0,0,.08);
+}
+
+/* ANTI-COPY & SECURITY */
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-user-drag: none;
+}
+
+html{
+    scroll-behavior:smooth;
+}
+
+body{
+    font-family:Segoe UI,Arial,sans-serif;
+    background: linear-gradient(135deg, var(--bg1), var(--bg2));
+    background-size: 400% 400%;
+    animation: gradientBG 15s ease infinite;
+    color:var(--text);
+    min-height:100vh;
+    transition:.25s ease;
+}
+
+/* Stops background scrolling when python panel is open */
+body.python-active {
+    overflow: hidden;
+}
+
+@keyframes gradientBG {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+}
+
+/* DECORATED BACKGROUND ELEMENTS */
+.ambient-glow {
+    position: fixed;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(circle, var(--glow), transparent 60%);
+    border-radius: 50%;
+    top: -200px;
+    left: -200px;
+    z-index: -1;
+    opacity: 0.5;
+    pointer-events: none;
+}
+.ambient-glow.right {
+    top: auto;
+    bottom: -200px;
+    left: auto;
+    right: -200px;
+    background: radial-gradient(circle, rgba(147,51,234,0.3), transparent 60%);
+}
+
+/* DISCORD BUTTON */
+.discord-btn {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: linear-gradient(135deg, #5865F2, #4752C4);
+    color: white;
+    padding: 10px 16px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(88, 101, 242, 0.3);
+    z-index: 1000;
+    transition: all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 1px solid rgba(255,255,255,0.2);
+}
+
+.discord-btn:hover {
+    transform: translateY(-5px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(88, 101, 242, 0.5);
+}
+
+.discord-btn svg {
+    width: 24px;
+    height: 24px;
+    fill: white;
+}
+
+/* NAV */
+.nav{
+    position:sticky;
+    top:0;
+    z-index:999;
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    justify-content:center;
+    align-items:center;
+    padding:14px;
+    backdrop-filter:blur(20px);
+    background:rgba(2,6,23,.6);
+    border-bottom:1px solid rgba(255,255,255,.05);
+}
+
+body[data-theme="light"] .nav{
+    background:rgba(255,255,255,.75);
+    border-bottom:1px solid #dbeafe;
+}
+
+.nav button,
+.nav select{
+    padding:10px 16px;
+    border:none;
+    border-radius:999px;
+    font-weight:700;
+    cursor:pointer;
+    transition: all .25s ease;
+}
+
+.nav button{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:white;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.3);
+}
+
+.nav select{
+    background:var(--card);
+    color:var(--text);
+    border:1px solid var(--line);
+}
+
+.nav button:hover,
+.nav select:hover{
+    transform:translateY(-3px);
+    box-shadow: 0 8px 25px rgba(56, 189, 248, 0.5);
+}
+
+/* PAGE */
+.page{
+    display:none;
+    padding:30px 20px 50px;
+    animation:fade .4s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.page.active{
+    display:block;
+}
+
+h1{
+    text-align:center;
+    font-size:clamp(32px,6vw,54px);
+    margin-bottom:14px;
+    background:linear-gradient(135deg, #fff, var(--accent));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    text-shadow: 0 10px 30px rgba(56,189,248,0.2);
+}
+
+body[data-theme="light"] h1 {
+    background:linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip:text;
+    background-clip:text;
+}
+
+.sub{
+    text-align:center;
+    max-width:900px;
+    margin:0 auto 28px;
+    color:var(--muted);
+    line-height:1.7;
+    font-size: 1.1rem;
+}
+
+/* HERO - DECORATED */
+.hero{
+    min-height:78vh;
+    display:grid;
+    place-items:center;
+}
+
+.heroBox{
+    width:min(100%,980px);
+    background:rgba(17,24,39,.6);
+    backdrop-filter: blur(16px);
+    border:1px solid rgba(255,255,255,0.08);
+    border-radius:32px;
+    padding:40px 22px;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.1);
+    text-align:center;
+    position: relative;
+    overflow: hidden;
+}
+
+.heroBox::before {
+    content: '';
+    position: absolute;
+    top: -50%; left: -50%;
+    width: 200%; height: 200%;
+    background: conic-gradient(transparent, var(--accent), transparent 30%);
+    animation: rotate 8s linear infinite;
+    opacity: 0.1;
+    z-index: -1;
+}
+
+@keyframes rotate {
+    100% { transform: rotate(360deg); }
+}
+
+body[data-theme="light"] .heroBox{
+    background:rgba(255,255,255,.8);
+    box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+}
+
+.heroBox h2 {
+    color: var(--accent);
+    margin-bottom: 20px;
+    font-weight: 700;
+    font-size: 1.4rem;
+    letter-spacing: 0.5px;
+}
+
+.heroBox p{
+    color:var(--text);
+    line-height:1.8;
+    max-width:760px;
+    margin:0 auto;
+    font-size: 1.1rem;
+}
+
+.heroBtns{
+    margin-top:28px;
+    display:flex;
+    gap:16px;
+    flex-wrap:wrap;
+    justify-content:center;
+}
+
+.heroBtns button{
+    padding:16px 28px;
+    border:none;
+    border-radius:18px;
+    font-weight:900;
+    font-size: 1.05rem;
+    cursor:pointer;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color:#fff;
+    transition:all .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 20px rgba(147, 51, 234, 0.3);
+}
+
+.heroBtns button:hover{
+    transform:translateY(-4px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(147, 51, 234, 0.5);
+}
+
+/* GRID */
+.grid,
+.featureGrid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+    gap:22px;
+    margin-top:24px;
+}
+
+/* CARD - DECORATED */
+.card,
+.featureCard{
+    background:rgba(17,24,39,.7);
+    backdrop-filter: blur(10px);
+    border:1px solid rgba(255,255,255,.05);
+    border-radius:24px;
+    padding:22px;
+    box-shadow:var(--shadow);
+    transition:all .3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position:relative;
+    overflow:hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+body[data-theme="light"] .card,
+body[data-theme="light"] .featureCard{
+    background:#ffffff;
+    border: 1px solid rgba(0,0,0,0.05);
+}
+
+.card::before, .featureCard::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; width: 100%; height: 4px;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    opacity: 0;
+    transition: .3s ease;
+}
+
+.card:hover::before, .featureCard:hover::before {
+    opacity: 1;
+}
+
+.card:hover,
+.featureCard:hover{
+    transform:translateY(-8px);
+    border-color:rgba(56,189,248,.3);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.4), 0 0 20px rgba(56,189,248,0.1);
+}
+
+.card h3,
+.featureCard h3{
+    margin-bottom:12px;
+    font-size:22px;
+    color: #fff;
+}
+
+body[data-theme="light"] .card h3 { color: var(--text); }
+
+.card p,
+.featureCard p{
+    color:var(--muted);
+    line-height:1.7;
+    flex-grow: 1;
+}
+
+.card button{
+    margin-top:16px;
+    padding:12px 18px;
+    border:none;
+    border-radius:14px;
+    background:rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    color:white;
+    font-weight:800;
+    cursor:pointer;
+    transition:all .2s ease;
+    align-self: flex-start;
+}
+
+body[data-theme="light"] .card button {
+    background: #f1f5f9;
+    color: var(--text);
+    border-color: #cbd5e1;
+}
+
+.card button:hover{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    color: white;
+    border-color: transparent;
+    transform:translateY(-2px);
+    box-shadow: 0 8px 15px rgba(56, 189, 248, 0.4);
+}
+
+/* RECOMMENDED BADGE */
+.recBadge{
+    display:inline-block;
+    background:linear-gradient(135deg,#22c55e,#16a34a);
+    color:#fff;
+    font-size:11px;
+    font-weight:800;
+    padding:4px 12px;
+    border-radius:999px;
+    margin-bottom:10px;
+    letter-spacing:1px;
+    text-transform:uppercase;
+    box-shadow: 0 4px 10px rgba(34, 197, 94, 0.3);
+}
+
+/* SCRIPT TABS */
+.scriptTabs{
+    display:flex;
+    gap:12px;
+    justify-content:center;
+    margin-bottom:32px;
+    flex-wrap:wrap;
+}
+
+.tabBtn{
+    padding:14px 32px;
+    border:2px solid rgba(255,255,255,0.1);
+    border-radius:999px;
+    background:rgba(0,0,0,0.2);
+    color:var(--muted);
+    font-weight:800;
+    font-size:16px;
+    cursor:pointer;
+    transition:all .3s ease;
+}
+
+body[data-theme="light"] .tabBtn {
+    border-color: #cbd5e1;
+    background: white;
+}
+
+.tabBtn.active{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    border-color:transparent;
+    color:#fff;
+    box-shadow: 0 10px 20px rgba(56, 189, 248, 0.3);
+}
+
+.tabBtn:hover:not(.active){
+    border-color:var(--accent);
+    color:var(--text);
+    transform: translateY(-2px);
+}
+
+.tabPanel{
+    display:none;
+}
+
+.tabPanel.active{
+    display:block;
+    animation:fade .4s ease;
+}
+
+/* PRE CODE */
+pre{
+    margin:14px 0;
+    background:#0b1224;
+    color:#38bdf8;
+    padding:16px;
+    border-radius:16px;
+    border:1px solid rgba(56,189,248,.2);
+    overflow:auto;
+    line-height:1.6;
+    font-size:14px;
+    font-family: 'Courier New', Courier, monospace;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.5);
+}
+
+body[data-theme="light"] pre{
+    background:#f8fafc;
+    color:#2563eb;
+    border:1px solid #cbd5e1;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.05);
+}
+
+/* MODAL */
+#modal{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.8);
+    backdrop-filter: blur(8px);
+    display:none;
+    justify-content:center;
+    align-items:center;
+    padding:18px;
+    z-index:1000;
+}
+
+.modalBox{
+    width:min(900px,100%);
+    max-height:85vh;
+    overflow:auto;
+    background:var(--card);
+    border:1px solid rgba(255,255,255,0.1);
+    border-radius:28px;
+    padding:30px;
+    box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+    animation:pop .3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.modalHeader{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    gap: 15px;
+}
+
+.modalHeader h2{
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+    font-size: 28px;
+}
+
+.modalHeaderControls {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.voiceBtn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+    padding: 5px;
+}
+
+.voiceBtn:hover {
+    transform: scale(1.2);
+}
+
+.closeBtn{
+    width:42px;
+    height:42px;
+    border:none;
+    border-radius:50%;
+    font-size:24px;
+    font-weight:900;
+    cursor:pointer;
+    color:#fff;
+    background:rgba(255,255,255,0.1);
+    transition:all .2s ease;
+}
+
+.closeBtn:hover{
+    background:linear-gradient(135deg,#ef4444,#fb7185);
+    transform:scale(1.1) rotate(90deg);
+}
+
+.block{
+    margin-bottom:24px;
+}
+
+.block h4{
+    color:var(--accent);
+    margin-bottom:12px;
+    font-size:18px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 800;
+}
+
+.block ul{
+    margin-left:24px;
+    color:var(--text);
+    line-height:1.8;
+}
+
+.block ul li{
+    margin-bottom:10px;
+    color: var(--muted);
+}
+
+
+/* TIPS & TRICKS */
+.tipsSplit{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:22px;
+    margin-top:24px;
+}
+
+.sectionHead{
+    text-align:center;
+    margin:12px 0 8px;
+    font-size:clamp(22px,3.2vw,30px);
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text;
+    background-clip:text;
+    color:transparent;
+}
+
+@media(max-width:900px){
+    .tipsSplit{
+        grid-template-columns:1fr;
+    }
+}
+
+/* SMALL */
+::-webkit-scrollbar{
+    width:10px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg1);
+}
+
+::-webkit-scrollbar-thumb{
+    background: linear-gradient(180deg, var(--accent), var(--accent2));
+    border-radius:999px;
+    border: 2px solid var(--bg1);
+}
+
+/* ANIMATION */
+@keyframes fade{
+    from{ opacity:0; transform:translateY(15px); }
+    to{ opacity:1; transform:translateY(0); }
+}
+
+@keyframes pop{
+    from{ opacity:0; transform:scale(.9) translateY(20px); }
+    to{ opacity:1; transform:scale(1) translateY(0); }
+}
+
+/* MOBILE */
+@media(max-width:700px){
+    .nav{ gap:8px; padding:12px; }
+    .nav button, .nav select{ padding:8px 14px; font-size:13px; }
+    .heroBox{ padding:30px 18px; }
+    .card h3{ font-size:20px; }
+    .discord-btn { top: auto; bottom: 20px; right: 20px; }
+}
+
+/* =========================================
+   PYTHON RUNNER CSS & ANIMATIONS 
+========================================= */
+
+/* Background Overlay Blur */
+#pythonOverlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    z-index: 1998;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.5s ease;
+}
+body.python-active #pythonOverlay {
+    opacity: 1;
+    pointer-events: all;
+}
+
+/* PYTHON RUNNER PANEL */
+#pythonPanel {
+    position: fixed;
+    top: 0;
+    left: -650px;
+    width: min(650px, 95vw);
+    height: 100vh;
+    background: var(--bg2);
+    border-right: 1px solid rgba(255,255,255,0.1);
+    border-radius: 0 24px 24px 0;
+    box-shadow: 20px 0 60px rgba(0,0,0,0.6);
+    z-index: 2000;
+    transition: left 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+body[data-theme="light"] #pythonPanel {
+    border-right: 1px solid var(--line);
+    box-shadow: 20px 0 60px rgba(0,0,0,0.2);
+}
+body.python-active #pythonPanel {
+    left: 0;
+}
+
+/* Iframe pop-in effect */
+.iframeWrapper {
+    flex-grow: 1;
+    width: 100%;
+    background: #fff;
+    opacity: 0;
+    transform: scale(0.95) translateY(20px);
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition-delay: 0.2s; 
+}
+body.python-active .iframeWrapper {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+}
+
+.pythonHeader {
+    padding: 18px 24px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: 800;
+    font-size: 1.3rem;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    z-index: 2;
+}
+
+.closePython {
+    background: rgba(255,255,255,0.15);
+    border: none;
+    color: white;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    font-size: 20px;
+    font-weight: bold;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+.closePython:hover { 
+    background: #ef4444; 
+    transform: scale(1.15) rotate(90deg); 
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+}
+
+/* PYTHON TOGGLE BUTTON - Animated */
+#pythonToggle {
+    position: fixed;
+    top: 50%;
+    left: 0;
+    transform: translateY(-50%);
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    padding: 20px 14px;
+    border-radius: 0 16px 16px 0;
+    cursor: pointer;
+    z-index: 1999;
+    font-weight: 800;
+    border: 1px solid rgba(255,255,255,0.2);
+    border-left: none;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+    font-size: 16px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    animation: pulseGlow 2.5s infinite;
+}
+
+@keyframes pulseGlow {
+    0%   { box-shadow: 5px 0 15px rgba(56, 189, 248, 0.2); }
+    50%  { box-shadow: 5px 0 30px rgba(147, 51, 234, 0.6); }
+    100% { box-shadow: 5px 0 15px rgba(56, 189, 248, 0.2); }
+}
+
+#pythonToggle:hover {
+    padding-left: 24px;
+    background: linear-gradient(135deg, var(--accent2), var(--accent));
+}
+
+/* Hide button smoothly when panel is open */
+body.python-active #pythonToggle {
+    left: -100px;
+}
+</style>
+</head>
+<body data-theme="dark">
+
+<div id="pythonOverlay" onclick="togglePythonPanel()"></div>
+<div id="pythonToggle" onclick="togglePythonPanel()">🐍 Run Python</div>
+
+<div id="pythonPanel">
+    <div class="pythonHeader">
+        <span>🐍 Code Workspace</span>
+        <button class="closePython" onclick="togglePythonPanel()">×</button>
+    </div>
+    <div class="iframeWrapper">
+        <iframe 
+            src="https://trinket.io/embed/python3" 
+            width="100%" 
+            height="100%" 
+            frameborder="0" 
+            marginwidth="0" 
+            marginheight="0" 
+            sandbox="allow-scripts allow-same-origin"
+            allowfullscreen>
+        </iframe>
+    </div>
+</div>
+<div class="ambient-glow"></div>
+<div class="ambient-glow right"></div>
+
+<div class="discord-btn" onclick="copyDiscord()">
+    <svg viewBox="0 0 127.14 96.36">
+        <path d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2a75.57,75.57,0,0,0,64.32,0c.87.71,1.76,1.39,2.66,2a68.68,68.68,0,0,1-10.87,5.19,77,77,0,0,0,6.89,11.1A105.25,105.25,0,0,0,126.6,80.22h0C129.24,52.84,122.09,29.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.74,11.43-12.74S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.31,60,73.31,53s5-12.74,11.43-12.74S96.33,46,96.22,53,91.08,65.69,84.69,65.69Z"/>
+    </svg>
+    Discord
+</div>
+
+<nav class="nav">
+    <button onclick="showPage('home')">🏠 Home</button>
+    <button onclick="showPage('studio')">🛠 Studio Guide</button>
+    <button onclick="showPage('script')">💻 Scripting</button>
+
+    <select id="langSelect" onchange="onLangChange(this.value)">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="es">Spanish</option>
+        <option value="ru">Russian</option>
+        <option value="fr">French</option>
+    </select>
+
+    <button onclick="toggleTheme()">🎨 Theme</button>
+</nav>
+
+<section id="home" class="page active">
+    <div class="hero">
+        <div class="heroBox">
+            <h1>🎮 Roblox Dev Learning</h1>
+            <h2>The Ultimate Interactive Guide to Mastering Roblox Studio & Lua</h2>
+            <p>
+                Welcome to the ultimate hub for future Roblox developers! This website is designed to take you from a complete beginner to an advanced scripter. Follow the sequential path to mastery. Start with Step 1 in Studio, master your environment, and then advance through the Lua scripting lessons in order.
+            </p>
+
+            <div class="heroBtns">
+                <button onclick="showPage('studio')">🛠 Start Step-by-Step</button>
+                <button onclick="showPage('script')">💻 Go to Scripts</button>
+            </div>
+
+            <div class="featureGrid">
+
+                <div class="featureCard" onclick="showPage('studio')">
+                    <div class="recBadge">✅ Start Here</div>
+                    <h3>🛠 Studio Guide</h3>
+                    <p>Follow the sequence: Learn Explorer, Properties, Anchoring, Collisions, and Lighting before coding.</p>
+                </div>
+
+                <div class="featureCard" onclick="switchTab('lua'); showPage('script')">
+                    <h3>💻 Scripting Path</h3>
+                    <p>Learn strictly in order: Variables -> Math -> Logic -> Loops -> Functions -> CFrames.</p>
+                </div>
+
+                <div class="featureCard" onclick="switchTab('services'); showPage('script')">
+                    <h3>🔥 game:GetService()</h3>
+                    <p>Master the core API sequence: Workspace, Players, RunService, ReplicatedStorage & more.</p>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</section>
+
+<section id="studio" class="page">
+    <h1>📦 Sequential Studio Guide</h1>
+    <p class="sub">
+        Do not skip ahead! Learn these Studio tools in exact order before writing any scripts.
+    </p>
+
+    <div class="grid" id="studioGrid"></div>
+</section>
+
+<section id="script" class="page">
+    <h1>💻 Lua Learning Path</h1>
+    <p class="sub">
+        Learn Roblox Lua step-by-step, then master every essential <code>game:GetService()</code> API.
+    </p>
+
+    <div class="scriptTabs">
+        <button class="tabBtn active" id="tab-lua" onclick="switchTab('lua')">📖 Lua Scripting (Ordered)</button>
+        <button class="tabBtn" id="tab-services" onclick="switchTab('services')">🔥 game:GetService() API</button>
+    </div>
+
+    <div class="tabPanel active" id="panel-lua">
+        <div class="grid" id="scriptGrid"></div>
+    </div>
+
+    <div class="tabPanel" id="panel-services">
+        <p class="sub" style="margin-bottom:16px;">
+            Learn the services in order. These are the tools that power your game mechanics.
+        </p>
+        <div class="grid" id="serviceGrid"></div>
+    </div>
+
+</section>
+
+
+<section id="tips" class="page">
+    <h1>💡 Tips and Tricks</h1>
+    <p class="sub">
+        Quick tips and clever tricks for new Roblox developers. Learn faster, build cleaner, and debug smarter.
+    </p>
+
+    <div class="tipsSplit">
+        <div>
+            <h2 class="sectionHead">20 Tips</h2>
+            <div class="grid" id="tipsGrid"></div>
+        </div>
+
+        <div>
+            <h2 class="sectionHead">20 Tricks</h2>
+            <div class="grid" id="tricksGrid"></div>
+        </div>
+    </div>
+</section>
+
+<div id="modal"></div>
+
+
+<script>
+/* =========================================
+   ULTIMATE SECURITY & ANTI-INSPECT SYSTEM
+========================================= */
+(function() {
+    // 1. Disable Right-Click (Context Menu) everywhere on your document
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    // 2. Aggressive Keyboard Shortcut Blocker (Windows & Mac)
+    document.addEventListener('keydown', function(e) {
+        // Prevent F12
+        if (e.key === 'F12' || e.keyCode === 123) { 
+            e.preventDefault(); return false; 
+        }
+        
+        // Prevent Ctrl+Shift+I / Cmd+Option+I (Inspect)
+        // Prevent Ctrl+Shift+J / Cmd+Option+J (Console)
+        // Prevent Ctrl+Shift+C / Cmd+Option+C (Element Select)
+        if ((e.ctrlKey || e.metaKey) && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'J' || e.key === 'j' || e.key === 'C' || e.key === 'c')) { 
+            e.preventDefault(); return false; 
+        }
+        
+        // Prevent Ctrl+U / Cmd+Option+U (View Source)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'U' || e.key === 'u')) { 
+            e.preventDefault(); return false; 
+        }
+        
+        // Prevent Ctrl+S / Cmd+S (Save Page)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'S' || e.key === 's')) { 
+            e.preventDefault(); return false; 
+        }
+
+        // Prevent Ctrl+P / Cmd+P (Print Page to PDF)
+        if ((e.ctrlKey || e.metaKey) && (e.key === 'P' || e.key === 'p')) { 
+            e.preventDefault(); return false; 
+        }
+    });
+
+    // 3. Disable Copy, Cut, and Paste completely
+    document.addEventListener('copy', function(e) {
+        e.preventDefault();
+        if (e.clipboardData) {
+            e.clipboardData.setData('text/plain', 'Nice try! Code copying is disabled.');
+        }
+    });
+    document.addEventListener('cut', function(e) { e.preventDefault(); });
+    document.addEventListener('paste', function(e) { e.preventDefault(); });
+
+    // 4. The "Debugger Trap" - Freezes the browser if they open the console
+    // NOTE TO DEV: Comment out this setInterval block if you need to edit your own code!
+    setInterval(function() {
+        (function() { return false; } ['constructor']('debugger') ['call']());
+        console.clear();
+        console.log("%cSTOP!", "color: red; font-size: 60px; font-weight: bold; text-shadow: 2px 2px 0 #000;");
+        console.log("%cThis is a secured environment. Reverse engineering is prohibited.", "color: white; font-size: 18px; background: black; padding: 5px;");
+    }, 50);
+
+    // 5. Anti-Drag (Prevents dragging images or text to save them)
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+    });
+})();
+
+function copyDiscord() {
+    navigator.clipboard.writeText("galaxy_boy95").then(() => {
+        alert("Discord username copied! Username: galaxy_boy95.");
+    }).catch(err => {
+        alert("Discord username is: galaxy_boy95.");
+    });
+}
+
+/* =========================================
+   PYTHON RUNNER JS 
+========================================= */
+function togglePythonPanel() {
+    document.body.classList.toggle('python-active');
+}
+/* ========================================= */
+
+/* =========================
+BASIC SETUP
+========================= */
+
+function escapeHTML(str){
+    const div = document.createElement('div');
+    div.textContent = str;
+    return div.innerHTML;
+}
+
+function showPage(pageId){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(pageId).classList.add('active');
+    window.scrollTo(0,0);
+}
+
+function toggleTheme(){
+    const current = document.body.getAttribute('data-theme');
+    document.body.setAttribute('data-theme', current === 'dark' ? 'light' : 'dark');
+}
+
+function closeModal(){
+    document.getElementById('modal').style.display = 'none';
+    window.speechSynthesis.cancel(); // Stop speaking when closed
+}
+
+let currentLang = "en";
+
+function speakText(text) {
+    if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        const langMap = { en: 'en-US', hi: 'hi-IN', es: 'es-ES', ru: 'ru-RU', fr: 'fr-FR' };
+        utterance.lang = langMap[currentLang] || 'en-US';
+        window.speechSynthesis.speak(utterance);
+    } else {
+        alert("Text-to-speech is not supported in your browser.");
+    }
+}
+
+function onLangChange(lang){
+    currentLang = lang;
+    window.speechSynthesis.cancel();
+    buildStudioGrid();
+    buildServiceGrid();
+    buildScriptLessonsGrid();
+    buildTipsTricksGrid();
+}
+
+function switchTab(tab){
+    document.querySelectorAll('.tabBtn').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + tab).classList.add('active');
+
+    document.querySelectorAll('.tabPanel').forEach(p => p.classList.remove('active'));
+    document.getElementById('panel-' + tab).classList.add('active');
+}
+
+/* =========================
+DATA: STUDIO GUIDE (SEQUENTIAL)
+========================= */
+const studioData = {
+    en: {
+        "Step 1: Explorer": {
+            summary: "Shows every object in your game — the most important panel",
+            what: "The Explorer panel is a list of every single object that exists in your game. Think of it like a file manager but for your game world.",
+            why: ["Find any Part or Script instantly", "Organize game using folders", "Select objects to edit Properties", "See parent-child relationships"],
+            when: "Always. It is the absolute foundation of Roblox Studio.",
+            tips: ["Right-click for menus.", "Use Ctrl+F to search.", "Drag to re-parent objects."],
+            example: "Workspace\n  └── Map\n        └── Baseplate\nServerScriptService\n  └── MainScript"
+        },
+        "Step 2: Properties": {
+            summary: "Edit settings of an object — color, size, material",
+            what: "Shows every setting belonging to a selected object in the Explorer. Change look and physics without coding.",
+            why: ["Change color/material", "Make invisible (Transparency)", "Turn off CanCollide"],
+            when: "Immediately after selecting an object in Explorer.",
+            tips: ["Always check Anchored for static parts.", "Transparency 1 = invisible."],
+            example: "Name: Door\nAnchored: true\nColor: [255, 0, 0]\nTransparency: 0\nCanCollide: true"
+        },
+        "Step 3: Move / Scale / Rotate": {
+            summary: "Tools to build and place everything in your world",
+            what: "Transform tools to position, resize, and angle parts.",
+            why: ["Build maps", "Resize walls", "Rotate props"],
+            when: "Whenever you are physically building the game map.",
+            tips: ["W=Move, E=Rotate, R=Scale.", "Hold Shift to snap to grid."],
+            example: "Red axis = X (Left/Right)\nGreen axis = Y (Up/Down)\nBlue axis = Z (Forward/Back)"
+        },
+        "Step 4: Anchoring & Collisions": {
+            summary: "Physics basics: stop parts from falling or let players walk through them",
+            what: "Anchoring freezes a part in space so gravity doesn't affect it. Collisions decide if physical bodies hit each other.",
+            why: ["Stop floating walls from falling", "Make secret doors players can walk through", "Create trigger zones"],
+            when: "Every time you create a new part.",
+            tips: ["Shortcut: Alt+A to toggle Anchor.", "Turn CanCollide off for 'hitbox' parts."],
+            example: "Building a house? Anchor all walls.\nBuilding a ghost? CanCollide = false."
+        },
+        "Step 5: Toolbox": {
+            summary: "Free models, audio, and plugins",
+            what: "Roblox's asset library. Get free items made by others.",
+            why: ["Insert trees, cars, sounds", "Install plugins", "Speed up development"],
+            when: "When prototyping or looking for sound effects.",
+            tips: ["Beware of free models with virus scripts.", "Check Explorer after inserting."],
+            example: "Search 'Tree' -> Click to insert into Workspace."
+        },
+        "Step 6: Lighting & Atmosphere": {
+            summary: "Make your game look realistic and beautiful",
+            what: "The Lighting service controls the sun, skybox, fog, and color correction.",
+            why: ["Set time of day", "Add fog for horror games", "Change skybox for space games"],
+            when: "After building your base map.",
+            tips: ["Add a ColorCorrectionEffect to change contrast.", "Add Atmosphere for realistic fog."],
+            example: "Lighting -> ClockTime = 14 (2 PM)\nLighting -> Ambient = [100, 100, 100]"
+        },
+        "Step 7: Terrain Editor": {
+            summary: "Paint water, grass, mountains, and sand",
+            what: "Built-in tool to generate and sculpt voxel terrain.",
+            why: ["Make natural landscapes", "Create oceans and rivers", "Paint paths"],
+            when: "When your game requires nature instead of blocky parts.",
+            tips: ["Use Generate to quickly make large maps.", "Use Paint to swap grass to dirt."],
+            example: "Terrain Editor -> Draw -> Select 'Water' -> Click and drag in 3D view."
+        },
+        "Step 8: Play Test Modes": {
+            summary: "Test game safely (Play vs Run vs Server)",
+            what: "Simulate the game to test mechanics.",
+            why: ["Test code", "See player perspective", "Check multiplayer bugs"],
+            when: "After writing a script or finishing a map section.",
+            tips: ["F5 = Play, F8 = Run (Server only).", "Changes made while playing DO NOT SAVE."],
+            example: "Play = Spawns your avatar.\nRun = Only runs scripts, no avatar."
+        },
+        "Step 9: Output Window": {
+            summary: "Find errors and read script messages",
+            what: "The console where your scripts talk back to you.",
+            why: ["Find bugs", "Read print() messages", "See warning signs"],
+            when: "ALWAYS have this open when coding.",
+            tips: ["Red text = Error (click to jump to line).", "White text = Print message."],
+            example: "Workspace.Script:5: attempt to index nil with 'Name'\n-> Bug is on line 5!"
+        },
+        "Step 10: Script Types": {
+            summary: "ServerScript vs LocalScript vs ModuleScript",
+            what: "Different scripts run in different environments (Server vs Player).",
+            why: ["Server handles data/health", "Local handles UI/Camera", "Module handles reusable code"],
+            when: "Before creating any new script.",
+            tips: ["LocalScripts don't work in Workspace.", "ServerScripts can't read player keyboard inputs."],
+            example: "ServerScript -> ServerScriptService\nLocalScript -> StarterPlayerScripts\nModuleScript -> ReplicatedStorage"
+        },
+        "Step 11: Grid Snapping": {
+            summary: "Snap parts to clean increments for perfect builds",
+            what: "Grid snapping lets you move and place objects in exact increments instead of freehand dragging.",
+            why: ["Keeps builds neat", "Makes parts line up faster", "Helps avoid tiny gaps"],
+            when: "Use it while building walls, floors, roads, and detailed maps.",
+            tips: ["Turn on snap from the toolbar.", "Smaller increments = more precision."],
+            example: "Set Move / Rotate / Scale snap to 0.25 or 1 stud for cleaner building."
+        },
+        "Step 12: Studio Shortcuts": {
+            summary: "Use keys to build much faster",
+            what: "Studio has many shortcuts that save time when building or editing.",
+            why: ["Switch tools instantly", "Undo mistakes faster", "Work like a pro"],
+            when: "Anytime you are building, resizing, or testing objects.",
+            tips: ["W = Move", "E = Rotate", "R = Scale", "Ctrl+Z = Undo"],
+            example: "Press W, E, R instead of clicking the toolbar every time."
+        },
+        "Step 13: Align Tool": {
+            summary: "Line up parts perfectly",
+            what: "The Align tool helps place objects on the same edge, center, or face.",
+            why: ["Makes walls straight", "Helps with doors and windows", "Saves time"],
+            when: "Use after moving parts into place by hand.",
+            tips: ["Select multiple parts first.", "Try center alignment for clean builds."],
+            example: "Model tab -> Align -> align the roof with the wall edges."
+        },
+        "Step 14: Union & Negate": {
+            summary: "Combine shapes or cut holes in them",
+            what: "Union merges parts together and Negate removes shape from another part.",
+            why: ["Create custom shapes", "Make windows and door holes", "Reduce part count"],
+            when: "Use for simple custom geometry and quick block modeling.",
+            tips: ["Keep a backup copy before unioning.", "Use fewer complex unions for performance."],
+            example: "Duplicate a wall part -> Negate a small block -> Union to make a doorway cutout."
+        },
+        "Step 15: Collision Groups": {
+            summary: "Control what collides with what",
+            what: "Collision groups let you decide which objects can touch each other physically.",
+            why: ["Ignore player vs NPC collisions", "Make ghost zones", "Reduce weird pushing"],
+            when: "For advanced physics and special gameplay rules.",
+            tips: ["Set groups in PhysicsService.", "Test collisions after changing groups."],
+            example: "Players can pass through projectiles if both are placed in different groups."
+        },
+        "Step 16: Constraints": {
+            summary: "Make objects move like real physics",
+            what: "Constraints connect parts and control motion, joints, and movement.",
+            why: ["Build moving doors", "Make swing doors", "Create vehicles and machines"],
+            when: "When you need parts connected by physics instead of manual scripting.",
+            tips: ["Look for HingeConstraint and RopeConstraint.", "Attach objects with Attachments first."],
+            example: "Use HingeConstraint to build a spinning fan or opening gate."
+        },
+        "Step 17: Attachments": {
+            summary: "Anchor points for constraints and effects",
+            what: "Attachments are invisible points used to connect constraints and particle effects.",
+            why: ["Needed for constraints", "Needed for beams", "Needed for trails"],
+            when: "Whenever you use advanced motion or visual effects.",
+            tips: ["Place attachments exactly where motion should start.", "Name them clearly."],
+            example: "Put two Attachments on a door and frame, then connect with HingeConstraint."
+        },
+        "Step 18: Terrain Sculpting": {
+            summary: "Shape mountains, water, and land",
+            what: "The Terrain Editor helps you paint and sculpt natural environments.",
+            why: ["Create islands", "Make hills and valleys", "Add water and sand"],
+            when: "For outdoor maps, adventure games, or realistic scenes.",
+            tips: ["Use smooth brush for cleaner terrain.", "Generate first, then sculpt detail."],
+            example: "Use Add and Subtract tools to make a hill next to a river."
+        },
+        "Step 19: Skybox": {
+            summary: "Change the sky in your game",
+            what: "A skybox changes the background sky with custom images or atmosphere effects.",
+            why: ["Make space games look real", "Create sunsets", "Give unique mood"],
+            when: "After your lighting is mostly finished.",
+            tips: ["Pick sky colors that match your map.", "A dark sky works great for horror."],
+            example: "Insert a Sky object into Lighting and set its textures."
+        },
+        "Step 20: Particle Emitters": {
+            summary: "Add smoke, sparkles, fire, and magic",
+            what: "ParticleEmitters create small animated particles from a part or attachment.",
+            why: ["Make explosions", "Add rain or dust", "Create magic effects"],
+            when: "For visual polish and game feedback.",
+            tips: ["Use low rate for performance.", "Attach them to invisible helper parts."],
+            example: "Add ParticleEmitter to a torch part to create flame sparks."
+        },
+        "Step 21: Sounds & Audio": {
+            summary: "Use music and sound effects",
+            what: "Add sounds to parts, UI, or the whole game to improve atmosphere.",
+            why: ["Footsteps", "Music", "Button clicks", "Warning alarms"],
+            when: "At any stage of gameplay feedback or immersion.",
+            tips: ["Keep sound volume balanced.", "Test with headphones and speakers."],
+            example: "Insert Sound into a part and set SoundId, Volume, and Looping."
+        },
+        "Step 22: Animations": {
+            summary: "Bring characters and objects to life",
+            what: "Animations let you play custom movements on rigs or objects.",
+            why: ["Walk cycles", "Emotes", "Door open animation"],
+            when: "After you understand rigs and the Animation Editor.",
+            tips: ["Use the Animation Editor plugin.", "Keep animations smooth and not too fast."],
+            example: "Create an animation, export it, then load it in a script with Animator."
+        },
+        "Step 23: Team Create": {
+            summary: "Build with friends in real time",
+            what: "Team Create lets multiple people edit the same place together.",
+            why: ["Work together", "Share tasks", "Avoid file confusion"],
+            when: "When collaborating on bigger projects.",
+            tips: ["Save often.", "Use folders so teammates stay organized."],
+            example: "Enable Team Create from the View or File menu and invite your team."
+        },
+        "Step 24: Plugins Manager": {
+            summary: "Manage your installed plugins",
+            what: "The Plugins manager helps you enable, disable, and organize Studio plugins.",
+            why: ["Keep workspace clean", "Remove old tools", "Use only needed helpers"],
+            when: "When you install lots of plugins for building.",
+            tips: ["Review plugin permissions.", "Delete plugins you no longer use."],
+            example: "Open the Plugins tab and manage your tools from one place."
+        },
+        "Step 25: Command Bar": {
+            summary: "Run small commands directly in Studio",
+            what: "The command bar lets you test code or run quick actions fast.",
+            why: ["Spawn parts", "Print objects", "Try quick experiments"],
+            when: "When you want to test a small script instantly.",
+            tips: ["Be careful with destructive commands.", "Great for short experiments."],
+            example: "print(workspace:GetChildren())"
+        },
+        "Step 26: Script Analysis": {
+            summary: "Catch warnings and common mistakes",
+            what: "Studio can analyze your scripts and point out risky or invalid code.",
+            why: ["Find bugs early", "Improve code quality", "Avoid nil mistakes"],
+            when: "While coding and before testing.",
+            tips: ["Read yellow warnings carefully.", "Fix the first bug before the rest."],
+            example: "If Studio warns about infinite yield, check that the object name is correct."
+        },
+        "Step 27: Output Debugging": {
+            summary: "Use Output to track problems",
+            what: "Output is your best friend for understanding what scripts are doing.",
+            why: ["See prints", "Read errors", "Track warnings"],
+            when: "Whenever something does not work as expected.",
+            tips: ["Add print() lines while learning.", "Click red errors to jump to the code."],
+            example: "print('Script started')"
+        },
+        "Step 28: StarterPlayer": {
+            summary: "Where player scripts and settings start",
+            what: "StarterPlayer controls what gets given to each player when they join.",
+            why: ["Set default character scripts", "Add player-side scripts", "Customize spawn behavior"],
+            when: "When building anything that affects each player individually.",
+            tips: ["Use StarterPlayerScripts for LocalScripts.", "Keep client code organized."],
+            example: "Place a LocalScript inside StarterPlayerScripts for input handling."
+        },
+        "Step 29: Replication": {
+            summary: "How server changes reach players",
+            what: "Replication is how the server shares visible changes to clients.",
+            why: ["Players see shared changes", "Sync parts and models", "Keep gameplay consistent"],
+            when: "Whenever a server script changes shared objects.",
+            tips: ["Use ReplicatedStorage for shared assets.", "Keep sensitive data server-only."],
+            example: "When the server moves a part in Workspace, clients can see it too."
+        },
+        "Step 30: Publish & Version History": {
+            summary: "Save and update your game safely",
+            what: "Publishing sends your work to Roblox, and version history helps restore older saves.",
+            why: ["Share with players", "Recover mistakes", "Track updates"],
+            when: "After testing and polishing your game.",
+            tips: ["Publish a backup before big changes.", "Use version history if something breaks."],
+            example: "File -> Publish to Roblox and check version history later if needed."
+        },
+        "Step 31: Lighting Effects": {
+            summary: "Add bloom, blur, and sun rays",
+            what: "Post-processing effects added to the Lighting service.",
+            why: ["Enhance visuals", "Create cinematic looks"],
+            when: "During the game polishing phase.",
+            tips: ["Don't overdo blur.", "SunRays look best during morning times."],
+            example: "Insert BloomEffect and DepthOfField into Lighting."
+        },
+        "Step 32: Beams & Trails": {
+            summary: "Draw lasers or follow movement",
+            what: "Visual effects that connect two points or trace a moving object.",
+            why: ["Create lasers", "Sword slashes", "Vehicle trails"],
+            when: "When adding special fx to weapons or fast objects.",
+            tips: ["They require Attachments.", "Adjust the texture length in properties."],
+            example: "Add Trail to a sword, connect Attachment0 and Attachment1."
+        },
+        "Step 33: Rope & Spring Constraints": {
+            summary: "Make swinging or bouncy physical parts",
+            what: "Physics constraints for ropes and springs.",
+            why: ["Grappling hooks", "Suspension", "Swinging bridges"],
+            when: "For physics-based puzzles or vehicles.",
+            tips: ["Requires two Attachments.", "Adjust damping for springs."],
+            example: "Connect two floating parts with a RopeConstraint."
+        },
+        "Step 34: SurfaceGuis": {
+            summary: "Put UI screens on 3D parts",
+            what: "UI elements that render directly onto the faces of physical parts.",
+            why: ["Computer screens", "Billboards", "Shop signs"],
+            when: "Creating diegetic interfaces in your 3D world.",
+            tips: ["Must be parented to a Part or StarterGui.", "Set the correct Face property."],
+            example: "Part -> SurfaceGui -> TextLabel"
+        },
+        "Step 35: BillboardGuis": {
+            summary: "Floating UI that faces the camera",
+            what: "UI elements that float above parts and always look at the player.",
+            why: ["Player name tags", "Floating health bars", "Interact icons"],
+            when: "Whenever an icon needs to be seen from any angle.",
+            tips: ["Use StudsOffset to raise it above the part.", "Set MaxDistance."],
+            example: "Part -> BillboardGui -> ImageLabel"
+        },
+        "Step 36: Decals & Textures": {
+            summary: "Add 2D images to 3D parts",
+            what: "Images pasted onto a specific face of a part.",
+            why: ["Posters", "Custom walls", "Caution tape"],
+            when: "To add detail without increasing part counts.",
+            tips: ["Textures repeat/tile, Decals stretch.", "Use transparent PNGs."],
+            example: "Part -> Texture (Adjust StudsPerTileU)"
+        },
+        "Step 37: Spawn Locations": {
+            summary: "Where players enter the game",
+            what: "The dedicated point where player characters instantiate.",
+            why: ["Set team spawns", "Control drop-in points"],
+            when: "Building your map's start zone.",
+            tips: ["Make them invisible by setting Transparency to 1.", "Turn off Decal."],
+            example: "Workspace -> SpawnLocation"
+        },
+        "Step 38: SoundRegions": {
+            summary: "Music that plays in specific areas",
+            what: "Using parts to dictate where 3D sounds can be heard.",
+            why: ["Cave echoes", "City ambiance", "Club music"],
+            when: "Creating immersive atmospheric zones.",
+            tips: ["Use RollOffMaxDistance.", "Place the sound inside a central part."],
+            example: "Part -> Sound (Looped = true, Playing = true)"
+        },
+        "Step 39: Welds & Motor6D": {
+            summary: "Glue parts together firmly",
+            what: "Welds hold parts completely still; Motors allow for animations.",
+            why: ["Building tools", "Attaching armor", "Rigging characters"],
+            when: "Creating custom characters or held items.",
+            tips: ["WeldConstraints are easier than old Welds.", "Use Motors for animating."],
+            example: "Select 2 Parts -> Create -> WeldConstraint"
+        },
+        "Step 40: MicroProfiler": {
+            summary: "Advanced performance debugging",
+            what: "A built-in tool that shows exactly what is causing lag on every frame.",
+            why: ["Fix lag", "Optimize scripts", "Analyze rendering"],
+            when: "When your game drops below 60 FPS.",
+            tips: ["Press Ctrl+F6 to open it.", "Look for long, wide bars indicating slow code."],
+            example: "Settings -> MicroProfiler -> Pause and read the frame graph."
+        }
+    }
+};
+
+['hi', 'es', 'ru', 'fr'].forEach(lang => {
+    studioData[lang] = JSON.parse(JSON.stringify(studioData.en));
+});
+
+/* =========================
+DATA: GETSERVICE API (SEQUENTIAL)
+========================= */
+const serviceData = {
+    en: {
+        "1. Workspace": {
+            summary: "Contains all 3D parts and models",
+            what: "The physical game world.",
+            why: ["Access parts", "Raycasting", "Gravity settings"],
+            when: "Step 1: Always used to interact with the physical world.",
+            example: `local Workspace = game:GetService("Workspace")\nlocal part = Workspace:WaitForChild("Part")`,
+            explain: ["Gets physical world", "Waits for a part"]
+        },
+        "2. Players": {
+            summary: "Manages all connected players",
+            what: "Handles join/leave events, characters, and data.",
+            why: ["PlayerAdded event", "Get LocalPlayer", "Manage leaderstats"],
+            when: "Step 2: Handling anything related to users.",
+            example: `local Players = game:GetService("Players")\nPlayers.PlayerAdded:Connect(function(plr)\n  print(plr.Name)\nend)`,
+            explain: ["Gets player service", "Fires when user joins"]
+        },
+        "3. ReplicatedStorage": { summary: "Shared storage for client and server", what: "Where you put RemoteEvents and ModuleScripts.", why: ["Client-Server communication", "Shared assets"], when: "Step 3: Setting up multiplayer networking.", example: `local RS = game:GetService("ReplicatedStorage")`, explain: ["Access shared storage"] },
+        "4. ServerStorage": { summary: "Secure server-only storage", what: "Clients cannot see or exploit items here.", why: ["Store admin tools"], when: "Step 4: Keeping sensitive items away from hackers.", example: `local SS = game:GetService("ServerStorage")`, explain: ["Access secure storage"] },
+        "5. RunService": { summary: "The game loop (Heartbeat, RenderStepped)", what: "Runs code every single frame (60 times a second).", why: ["Custom physics", "Camera systems"], when: "Step 5: When wait() is too slow.", example: `local RS = game:GetService("RunService")`, explain: ["Gets loop service"] },
+        "6. UserInputService": { summary: "Keyboard, Mouse, Touch, Gamepad", what: "Detects what buttons the player is pressing.", why: ["Sprint buttons"], when: "Step 6: Adding custom controls.", example: `local UIS = game:GetService("UserInputService")`, explain: ["Gets input service"] },
+        "7. TweenService": { summary: "Smoothly animate properties", what: "Animates Size, Position, Color.", why: ["Opening doors smoothly"], when: "Step 7: Making the game look polished.", example: `local TS = game:GetService("TweenService")`, explain: ["Gets animation service"] },
+        "8. Debris": { summary: "Clean up objects automatically", what: "Schedules an object to be destroyed.", why: ["Bullet casings"], when: "Step 8: Preventing server lag.", example: `local Debris = game:GetService("Debris")`, explain: ["Gets Debris API"] },
+        "9. Lighting": { summary: "Control sun, time, and atmosphere", what: "Changes the visual environment globally.", why: ["Day/Night cycles"], when: "Step 9: Environmental scripting.", example: `local Lighting = game:GetService("Lighting")`, explain: ["Gets Lighting API"] },
+        "10. DataStoreService": { summary: "Save data permanently", what: "Saves coins, levels, and inventory.", why: ["Persistence"], when: "Step 10: Advanced server scripting.", example: `local DSS = game:GetService("DataStoreService")`, explain: ["Gets database API"] },
+        "HttpService": { summary: "Web requests, JSON and data tools", what: "Lets scripts talk to web APIs.", why: ["Fetch remote data"], when: "Use for web-connected features.", example: `local HttpService = game:GetService("HttpService")`, explain: ["Gets web service"] },
+        "ContentProvider": { summary: "Preload assets before use", what: "Helps load images, sounds.", why: ["Reduce waiting"], when: "On loading screens.", example: `local ContentProvider = game:GetService("ContentProvider")`, explain: ["Gets loading helper"] },
+        "StarterGui": { summary: "Default GUI that copies to players", what: "Holds screen UI templates.", why: ["Create HUDs"], when: "UI design.", example: `local StarterGui = game:GetService("StarterGui")`, explain: ["Gets UI service"] },
+        "StarterPack": { summary: "Tools and items given to players", what: "Anything placed here is given to the player on spawn.", why: ["Give starter tools"], when: "For weapons.", example: `local StarterPack = game:GetService("StarterPack")`, explain: ["Gets gear service"] },
+        "StarterPlayer": { summary: "Player defaults and scripts", what: "Controls default scripts.", why: ["Add LocalScripts"], when: "For player setup.", example: `local StarterPlayer = game:GetService("StarterPlayer")`, explain: ["Gets player defaults"] },
+        "CollectionService": { summary: "Tag objects for easy grouping", what: "Gives tags to objects.", why: ["Group enemies"], when: "For large systems.", example: `local CollectionService = game:GetService("CollectionService")`, explain: ["Gets tagging service"] },
+        "PathfindingService": { summary: "Find paths for NPCs", what: "Helps NPCs navigate.", why: ["Enemy AI"], when: "For bots.", example: `local PathfindingService = game:GetService("PathfindingService")`, explain: ["Gets pathfinding"] },
+        "TextChatService": { summary: "Modern chat system", what: "The newer chat system.", why: ["Modern chat commands"], when: "In-game chat.", example: `local TextChatService = game:GetService("TextChatService")`, explain: ["Gets chat service"] },
+        "TextService": { summary: "Text filtering and formatting", what: "Used for safe text operations.", why: ["Filter chat"], when: "User text.", example: `local TextService = game:GetService("TextService")`, explain: ["Gets text service"] },
+        "ProximityPromptService": { summary: "Interaction prompts", what: "Handles prompts like Press E.", why: ["Doors"], when: "Clean interactions.", example: `local ProximityPromptService = game:GetService("ProximityPromptService")`, explain: ["Gets prompt service"] },
+        "PhysicsService": { summary: "Advanced collision control", what: "Manages collision groups.", why: ["Custom collisions"], when: "Advanced physics.", example: `local PhysicsService = game:GetService("PhysicsService")`, explain: ["Gets physics"] },
+        "SoundService": { summary: "Master audio settings", what: "Controls global sound.", why: ["Music mixing"], when: "Audio behavior.", example: `local SoundService = game:GetService("SoundService")`, explain: ["Gets sound"] },
+        "LocalizationService": { summary: "Support different languages", what: "Translates content.", why: ["Dynamic UI text"], when: "Multiple languages.", example: `local LocalizationService = game:GetService("LocalizationService")`, explain: ["Gets localization"] },
+        "GuiService": { summary: "UI and menu helpers", what: "Provides UI-related helpers.", why: ["Console support"], when: "Interface behavior.", example: `local GuiService = game:GetService("GuiService")`, explain: ["Gets GUI helper"] },
+        "ContextActionService": { summary: "Bind actions to input", what: "Connects actions to keyboard.", why: ["Mobile buttons"], when: "Action systems.", example: `local CAS = game:GetService("ContextActionService")`, explain: ["Gets action binding"] },
+        "TeleportService": { summary: "Move players between places", what: "Used to send players to another place.", why: ["Lobby systems"], when: "Multiple maps.", example: `local TeleportService = game:GetService("TeleportService")`, explain: ["Gets teleport service"] },
+        "AnimationClipProvider": { summary: "Work with animation assets", what: "Used for animation workflows.", why: ["Manage animations"], when: "Animation pipelines.", example: `local AnimationClipProvider = game:GetService("AnimationClipProvider")`, explain: ["Gets animation clip"] },
+        "MaterialService": { summary: "Material customization", what: "Lets you work with terrain.", why: ["Visual style"], when: "Visual tuning.", example: `local MaterialService = game:GetService("MaterialService")`, explain: ["Gets material service"] },
+        "Stats": { summary: "Performance and stats info", what: "Shows game statistics.", why: ["Debug performance"], when: "Profiling.", example: `local Stats = game:GetService("Stats")`, explain: ["Gets stats service"] },
+        "BadgeService": {
+            summary: "Award achievements to players",
+            what: "Service used to grant badges when players reach a milestone or find a secret.",
+            why: ["Player retention", "Reward exploration", "Gamification"],
+            when: "Whenever a player completes a notable task.",
+            example: "local BS = game:GetService('BadgeService')\nBS:AwardBadge(userId, badgeId)",
+            explain: ["Fetches the Badge API", "Grants badge to specific player ID"]
+        },
+        "MarketplaceService": {
+            summary: "Monetize your game (Gamepasses, DevProducts)",
+            what: "Handles all Robux transactions, gamepasses, and premium purchases.",
+            why: ["Make Robux", "Prompt purchases", "Verify premium players"],
+            when: "When selling items or detecting Roblox Premium.",
+            example: "local MS = game:GetService('MarketplaceService')\nMS:PromptGamePassPurchase(player, passId)",
+            explain: ["Fetches Marketplace API", "Opens the purchase pop-up for a player"]
+        },
+        "MessagingService": {
+            summary: "Communicate between different servers",
+            what: "Allows scripts in one server to send data to another completely different server.",
+            why: ["Global announcements", "Cross-server matchmaking", "Global leaderboards"],
+            when: "When data needs to jump between different instances of your game.",
+            example: "local MS = game:GetService('MessagingService')\nMS:PublishAsync('GlobalChat', 'Hello Worlds!')",
+            explain: ["Fetches Messaging API", "Sends a message to every active server"]
+        },
+        "MemoryStoreService": {
+            summary: "Fast, temporary data storage",
+            what: "A high-speed alternative to DataStoreService meant for temporary data like matchmaking queues.",
+            why: ["Matchmaking systems", "Live auctions", "Active trading"],
+            when: "When you need to read/write data rapidly without permanent saving limits.",
+            example: "local MSS = game:GetService('MemoryStoreService')\nlocal queue = MSS:GetQueue('Lobby')",
+            explain: ["Fetches Memory API", "Accesses a temporary queue list"]
+        },
+        "VoiceChatService": {
+            summary: "Manage spatial voice chat",
+            what: "Handles Roblox's spatial voice features and lets you check if a player is voice-enabled.",
+            why: ["Voice only doors", "Muting logic", "Custom voice UIs"],
+            when: "When designing features around player voice communication.",
+            example: "local VCS = game:GetService('VoiceChatService')\nlocal isEnabled = VCS:IsVoiceEnabledForUserIdAsync(userId)",
+            explain: ["Fetches Voice API", "Checks if player has a mic enabled"]
+        },
+        "PolicyService": {
+            summary: "Comply with global legal regulations",
+            what: "Provides information about what features are legally allowed for a player based on their country.",
+            why: ["Disable loot boxes in some regions", "Hide restricted content", "Stay compliant"],
+            when: "If your game contains paid random items or external links.",
+            example: "local PS = game:GetService('PolicyService')\nlocal policy = PS:GetPolicyInfoForPlayerAsync(player)",
+            explain: ["Fetches Policy API", "Gets legal rules for that specific player"]
+        },
+        "GroupService": {
+            summary: "Interact with Roblox Groups",
+            what: "Fetch information about a Roblox group, its allies, and its roles.",
+            why: ["Group locked doors", "Clan tags", "Role-based rewards"],
+            when: "Rewarding players for joining your development group.",
+            example: "local GS = game:GetService('GroupService')\nlocal info = GS:GetGroupInfoAsync(groupId)",
+            explain: ["Fetches Group API", "Returns data about the group"]
+        },
+        "SocialService": {
+            summary: "Game invites and social features",
+            what: "Allows you to prompt the user to invite their friends to the current game server.",
+            why: ["Boost player count", "Friend rewards", "Party systems"],
+            when: "When giving players an easy way to play with friends.",
+            example: "local Social = game:GetService('SocialService')\nSocial:PromptGameInvite(player)",
+            explain: ["Fetches Social API", "Opens the Roblox friend invite menu"]
+        },
+        "VRService": {
+            summary: "Virtual Reality input and tracking",
+            what: "Handles interactions specifically for players using VR headsets.",
+            why: ["Track hand movement", "VR specific UI", "Head tracking"],
+            when: "When making a game compatible with Oculus/Meta Quest or PC VR.",
+            example: "local VR = game:GetService('VRService')\nif VR.VREnabled then print('Player is in VR!') end",
+            explain: ["Fetches VR API", "Checks if headset is active"]
+        },
+        "LogService": {
+            summary: "Read the game's output console",
+            what: "Allows scripts to read what is being printed or errored in the F9 Developer Console.",
+            why: ["Custom admin logs", "Error reporting to Discord", "In-game bug trackers"],
+            when: "Building advanced developer tools for your game.",
+            example: "local LS = game:GetService('LogService')\nlocal logs = LS:GetLogHistory()",
+            explain: ["Fetches Log API", "Returns everything printed so far"]
+        }
+    }
+};
+
+['hi', 'es', 'ru', 'fr'].forEach(lang => { serviceData[lang] = JSON.parse(JSON.stringify(serviceData.en)); });
+
+/* =========================
+DATA: SCRIPT LESSONS (STRICT SEQUENCE, 55 LESSONS)
+========================= */
+
+const lessonExamples = [
+    `local coins = 100\nlocal name = "Prottoy"\nprint(coins)`, // 1
+    `local a = 10\nlocal b = 5\nprint(a + b)\nprint(a * b)`, // 2
+    `local name = "Alex"\nif true then\n  local coins = 50\nend`, // 3
+    `local coins = 120\nif coins > 100 then print("Rich") end`, // 4
+    `for i = 1, 5 do\n  print("Count:", i)\nend`, // 5
+    `local hp = 3\nwhile hp > 0 do\n  hp -= 1\nend`, // 6
+    `local function AddCoins(amount)\n  print("Added", amount)\nend\nAddCoins(50)`, // 7
+    `local inventory = {"Sword", "Shield", "Potion"}\nprint(inventory[1])`, // 8
+    `local stats = {HP = 100, Mana = 50}\nprint(stats.HP)`, // 9
+    `for index, value in pairs(stats) do\n  print(index, value)\nend`, // 10
+    `local part = workspace:FindFirstChild("Door")\nif part then print("Yes") end`, // 11
+    `local door = workspace:WaitForChild("Door")\nprint(door.Name)`, // 12
+    `local pos = Vector3.new(0, 50, 0)\nworkspace.Part.Position = pos`, // 13
+    `local posRot = CFrame.new(0, 10, 0) * CFrame.Angles(0, math.rad(90), 0)\npart.CFrame = posRot`, // 14
+    `game.Players.PlayerAdded:Connect(function(plr)\n  print(plr.Name)\nend)`, // 15
+    `part.Touched:Connect(function(hit)\n  print(hit.Name)\nend)`, // 16
+    `local debounce = false\npart.Touched:Connect(function()\n  if debounce then return end\n  debounce = true\n  task.wait(1)\n  debounce = false\nend)`, // 17
+    `local clone = workspace.Part:Clone()\nclone.Parent = workspace`, // 18
+    `workspace.Part:Destroy()`, // 19
+    `task.wait(2)\nprint("2 Seconds passed")`, // 20
+    `local RS = game:GetService("RunService")\nif RS:IsServer() then print("Server") end`, // 21
+    `local UIS = game:GetService("UserInputService")\nUIS.InputBegan:Connect(function(key)\n  print(key.KeyCode)\nend)`, // 22
+    `-- Client:\nRemote:FireServer()\n-- Server:\nRemote.OnServerEvent:Connect(function(plr)\nend)`, // 23
+    `local ls = Instance.new("Folder")\nls.Name = "leaderstats"\nls.Parent = player`, // 24
+    `local TS = game:GetService("TweenService")\nTS:Create(part, TweenInfo.new(1), {Size = Vector3.new(10,10,10)}):Play()`, // 25
+    `local isOpen = true\nif isOpen then print("Door open") end`, // 26
+    `local speed = 16\nif speed < 20 then print("Can speed up") end`, // 27
+    `local a = true\nlocal b = false\nif a and not b then print("Pass") end`, // 28
+    `local first = "Roblox"\nlocal second = "Dev"\nprint(first .. " " .. second)`, // 29
+    `local message = "Hello World"\nprint(string.upper(message))`, // 30
+    `local stats = { Coins = 100, Inv = {"Sword"} }\nprint(stats.Inv[1])`, // 31
+    `local Module = {}\nfunction Module.add(a, b) return a + b end\nreturn Module`, // 32
+    `local part = Instance.new("Part")\npart.Parent = workspace`, // 33
+    `part:SetAttribute("Coins", 50)\nprint(part:GetAttribute("Coins"))`, // 34
+    `print(math.random(1, 100))`, // 35
+    `task.spawn(function() print("Running in background") end)`, // 36
+    `local success, err = pcall(function() error("Fail") end)\nprint(success)`, // 37
+    `local result = workspace:Raycast(origin, direction)`, // 38
+    `button.MouseButton1Click:Connect(function() print("Clicked") end)`, // 39
+    `humanoid.Health = 100`, // 40
+    `player.Team = game.Teams.Red`, // 41
+    `prompt.Triggered:Connect(function(player) print(player.Name) end)`, // 42
+    `remoteFunction.OnServerInvoke = function(player) return 100 end`, // 43
+    `store:SetAsync("User_1", 250)`, // 44
+    `local Class = {}; Class.__index = Class`, // 45
+    `local co = coroutine.create(function()\n  print("Running")\nend)\ncoroutine.resume(co)`, // 46 
+    `local tab = setmetatable({}, {__index = function(t, k) return "Missing" end})\nprint(tab.Data)`, // 47 
+    `local hp = math.clamp(150, 0, 100) -- Forces number between 0 and 100\nprint(hp) -- Prints 100`, // 48 
+    `local mapHeight = math.noise(x/10, y/10, seed) * 50\nprint(mapHeight)`, // 49 
+    `local text = "Apple,Orange,Banana"\nlocal split = string.split(text, ",")\nprint(split[2]) -- Orange`, // 50 
+    `local RS = game:GetService("RunService")\nRS.RenderStepped:Connect(function(deltaTime)\n  -- Camera logic here\nend)`, // 51 
+    `local Bindable = Instance.new("BindableEvent")\nBindable.Event:Connect(function(msg) print(msg) end)\nBindable:Fire("Local Comm!")`, // 52 
+    `local state = 0\nlocal Mod = {}\nfunction Mod.Add() state += 1; return state end\nreturn Mod`, // 53 
+    `local conn\nconn = part.Touched:Connect(function()\n  print("Hit")\n  conn:Disconnect() -- Prevents leak\nend)`, // 54 
+    `local params = RaycastParams.new()\nparams.FilterDescendantsInstances = {player.Character}\nparams.FilterType = Enum.RaycastFilterType.Exclude` // 55 
+];
+
+const lessonText = {
+    en: [
+        { title:"Lesson 1: Variables", desc:"Store data like numbers and text.", explain:["'local' creates a variable.", "Values are stored in memory."] },
+        { title:"Lesson 2: Math", desc:"Add, subtract, multiply, and divide.", explain:["Use +, -, *, / for math.", "Essential for damage calculation."] },
+        { title:"Lesson 3: Scope", desc:"Where variables can be accessed.", explain:["Variables inside 'if' blocks stay inside.", "Cannot be used outside."] },
+        { title:"Lesson 4: If / Else", desc:"Logic gates for your code.", explain:["Checks if a condition is true.", "Runs specific code based on result."] },
+        { title:"Lesson 5: For Loop", desc:"Repeat code an exact number of times.", explain:["Define a start and end point.", "Runs the block over and over."] },
+        { title:"Lesson 6: While Loop", desc:"Repeat while true.", explain:["Keep running until the condition is false.", "Always use wait() inside!"] },
+        { title:"Lesson 7: Functions", desc:"Reusable blocks of code.", explain:["Define a set of actions.", "Call it anytime by name."] },
+        { title:"Lesson 8: Arrays", desc:"Lists of items.", explain:["Store multiple values using commas.", "Access by number index [1]."] },
+        { title:"Lesson 9: Dictionaries", desc:"Key-Value tables.", explain:["Store data using words instead of numbers.", "Access by word (stats.HP)."] },
+        { title:"Lesson 10: Pairs Loop", desc:"Looping through tables.", explain:["Reads every item inside an array or dictionary.", "Gives the Index and Value."] },
+        { title:"Lesson 11: FindFirstChild", desc:"Check if object exists.", explain:["Searches for a child object.", "Returns nil if missing."] },
+        { title:"Lesson 12: WaitForChild", desc:"Wait for object.", explain:["Halts script until object loads.", "Required for UI scripts."] },
+        { title:"Lesson 13: Vector3", desc:"3D Positions.", explain:["X, Y, Z coordinates.", "Used for moving objects or sizing."] },
+        { title:"Lesson 14: CFrame", desc:"Position + Rotation.", explain:["Coordinate Frame.", "Moves objects securely including angles."] },
+        { title:"Lesson 15: Events", desc:"Game triggers.", explain:["Code that waits for something to happen.", "PlayerAdded is an event."] },
+        { title:"Lesson 16: Touched", desc:"Physical hits.", explain:["Detects collision between parts.", "Returns what hit it."] },
+        { title:"Lesson 17: Debounce", desc:"Cooldowns.", explain:["Stops events from firing 100 times a second.", "Uses a boolean lock."] },
+        { title:"Lesson 18: Clone", desc:"Duplication.", explain:["Copies an object.", "Must set Parent to see it."] },
+        { title:"Lesson 19: Destroy", desc:"Deletion.", explain:["Removes object from memory permanently."] },
+        { title:"Lesson 20: Task Wait", desc:"Pausing code.", explain:["Yields script for X seconds.", "Modern version of wait()."] },
+        { title:"Lesson 21: Client vs Server", desc:"Network bounds.", explain:["Server runs for all.", "Client runs for one."] },
+        { title:"Lesson 22: User Input", desc:"Detect keys.", explain:["Reads keyboard/mouse.", "Client side only."] },
+        { title:"Lesson 23: Remotes", desc:"Network bridges.", explain:["Client sends data to server.", "Server verifies and acts."] },
+        { title:"Lesson 24: Leaderstats", desc:"Scoreboards.", explain:["Folder named 'leaderstats'.", "Auto-displays in top right."] },
+        { title:"Lesson 25: Tweening", desc:"Smooth animations.", explain:["Lerps properties over time.", "Looks highly professional."] },
+        { title:"Lesson 26: Booleans", desc:"Use true and false to control logic.", explain:["Booleans are only true or false.", "Great for states like open, alive."] },
+        { title:"Lesson 27: Comparison Operators", desc:"Compare values with <, >, <=, >= and ==", explain:["Useful for scores, health.", "Returns true or false."] },
+        { title:"Lesson 28: Logical Operators", desc:"Combine conditions with and, or, and not.", explain:["and means both must be true.", "not flips true to false."] },
+        { title:"Lesson 29: Strings", desc:"Text values in quotes.", explain:["Strings store words and sentences.", "Use .. to combine strings."] },
+        { title:"Lesson 30: String Methods", desc:"Change string case and text tools.", explain:["string.upper makes text uppercase."] },
+        { title:"Lesson 31: Nested Tables", desc:"Tables inside tables.", explain:["Great for inventories and player profiles."] },
+        { title:"Lesson 32: ModuleScripts", desc:"Reusable code modules.", explain:["Store functions once and use them many times."] },
+        { title:"Lesson 33: Instance.new", desc:"Create objects by script.", explain:["Make parts, folders, sounds.", "Set Parent so it appears."] },
+        { title:"Lesson 34: Attributes", desc:"Attach custom data to objects.", explain:["Attributes are lightweight object data."] },
+        { title:"Lesson 35: math.random", desc:"Make random numbers.", explain:["Great for loot, damage, and spawn choices."] },
+        { title:"Lesson 36: task.spawn", desc:"Run code in the background.", explain:["Useful when you do not want to pause the script."] },
+        { title:"Lesson 37: pcall", desc:"Protect code from crashes.", explain:["pcall catches errors safely."] },
+        { title:"Lesson 38: Raycasting", desc:"Shoot invisible detection lines.", explain:["Used for guns, clicking.", "Returns what the ray hits."] },
+        { title:"Lesson 39: GUI Buttons", desc:"Make UI respond to clicks.", explain:["Buttons can run code when clicked."] },
+        { title:"Lesson 40: Humanoid Health", desc:"Control player or NPC health.", explain:["Humanoid stores health.", "Great for combat systems."] },
+        { title:"Lesson 41: Teams", desc:"Assign players to teams.", explain:["Helpful for PvP and round systems."] },
+        { title:"Lesson 42: ProximityPrompt", desc:"Press E to interact.", explain:["Clean interaction system.", "Works for doors."] },
+        { title:"Lesson 43: RemoteFunctions", desc:"Client asks server and waits for reply.", explain:["Useful when you need a return value."] },
+        { title:"Lesson 44: DataStore Save", desc:"Save data to Roblox permanently.", explain:["Use for coins, levels."] },
+        { title:"Lesson 45: OOP Style", desc:"Build structured code with objects.", explain:["Great for larger projects."] },
+        { title:"Lesson 46: Coroutines", desc:"Advanced background tasks.", explain:["More controllable than task.spawn.", "Can be paused (yield) and resumed."] },
+        { title:"Lesson 47: Metatables", desc:"Tables that modify table behavior.", explain:["Allows you to make default values.", "The backbone of Object Oriented Programming in Lua."] },
+        { title:"Lesson 48: math.clamp", desc:"Restrict a number within limits.", explain:["Stops health from going below 0.", "Stops speeds from going above a max limit."] },
+        { title:"Lesson 49: math.noise", desc:"Smooth random generation (Perlin).", explain:["Used to generate smooth terrain.", "Produces flowing, natural random curves."] },
+        { title:"Lesson 50: String Split", desc:"Cut text into an array of words.", explain:["Breaks a string based on a separator.", "Extremely useful for chat commands."] },
+        { title:"Lesson 51: RenderStepped", desc:"Sync code to the camera frame.", explain:["Runs right before the frame draws.", "Essential for custom cameras and viewmodels."] },
+        { title:"Lesson 52: BindableEvents", desc:"Server-to-Server communication.", explain:["Like RemoteEvents, but only stays on one side.", "Great for modular code design."] },
+        { title:"Lesson 53: ModuleScript State", desc:"Saving data inside modules.", explain:["Modules run once per side.", "Variables inside them save state globally across scripts."] },
+        { title:"Lesson 54: Memory Leaks", desc:"Cleaning up disconnected events.", explain:["If you don't disconnect events, they run forever.", "Can cause immense server lag over time."] },
+        { title:"Lesson 55: RaycastParams", desc:"Advanced raycast filtering.", explain:["Allows rays to ignore specific parts like water or the player's own body.", "Crucial for accurate shooting."] }
+    ]
+};
+
+['hi', 'es', 'ru', 'fr'].forEach(lang => {
+    lessonText[lang] = JSON.parse(JSON.stringify(lessonText.en));
+});
+
+const modalLabels = {
+    en: { explanation:"Explanation", example:"Example", explained:"Example Explained", openLesson:"Study Lesson" },
+    hi: { explanation:"Explanation", example:"Example", explained:"Example Explained", openLesson:"Study Lesson" },
+    es: { explanation:"Explanation", example:"Example", explained:"Example Explained", openLesson:"Study Lesson" },
+    ru: { explanation:"Explanation", example:"Example", explained:"Example Explained", openLesson:"Study Lesson" },
+    fr: { explanation:"Explanation", example:"Example", explained:"Example Explained", openLesson:"Study Lesson" }
+};
+
+const tipsData = {
+    en: [
+        { title:"Tip 1", summary:"Use Explorer every time.", details:["It helps you find objects fast."], example:"Rename parts clearly." },
+        { title:"Tip 2", summary:"Check Properties after selecting.", details:["Most object settings live there."], example:"Set Anchored = true." },
+        { title:"Tip 3", summary:"Use print() while learning.", details:["It shows what your script is doing."], example:"print('Hello')" },
+        { title:"Tip 4", summary:"Keep Output open.", details:["Errors appear there."], example:"Watch for red messages." },
+        { title:"Tip 5", summary:"Anchor static parts.", details:["Anchored parts do not fall."], example:"Turn Anchored on." },
+        { title:"Tip 6", summary:"Use folders to stay neat.", details:["Keeps big games organized."], example:"Workspace > Map" },
+        { title:"Tip 7", summary:"Test often in Studio.", details:["Catch bugs early."], example:"Press Play often." },
+        { title:"Tip 8", summary:"Use WaitForChild for loading.", details:["Prevents nil errors."], example:"workspace:WaitForChild('Door')" },
+        { title:"Tip 9", summary:"Use LocalScripts for UI.", details:["UI belongs on the client."], example:"Place in StarterGui." },
+        { title:"Tip 10", summary:"Use Scripts for server logic.", details:["Coins should be server-side."], example:"Award coins in ServerScriptService." },
+        { title:"Tip 11", summary:"Use comments in code.", details:["Comments explain what a script does."], example:"-- Give player coins" },
+        { title:"Tip 12", summary:"Name things clearly.", details:["Clear names save time."], example:"MainDoor instead of Part5" },
+        { title:"Tip 13", summary:"Use consistent colors.", details:["Your UI looks better."], example:"Use the same accent color." },
+        { title:"Tip 14", summary:"Keep scripts small.", details:["Short scripts are easier to fix."], example:"Put reusable code in ModuleScripts." },
+        { title:"Tip 15", summary:"Use debounce on touch events.", details:["Stops spam triggers."], example:"if debounce then return end" },
+        { title:"Tip 16", summary:"Use SetAttribute for custom data.", details:["Cleaner than extra values."], example:"part:SetAttribute('Open', true)" },
+        { title:"Tip 17", summary:"Check for nil before using objects.", details:["Avoids broken scripts."], example:"if part then print(part.Name) end" },
+        { title:"Tip 18", summary:"Group models before moving.", details:["Grouped models move as one."], example:"Select parts -> Group" },
+        { title:"Tip 19", summary:"Use the Command Bar carefully.", details:["Great for testing quick commands."], example:"print(workspace:GetChildren())" },
+        { title:"Tip 20", summary:"Save versions before big changes.", details:["You can go back if something breaks."], example:"Publish a backup." }
+    ]
+};
+
+const tricksData = {
+    en: [
+        { title:"Trick 1", summary:"Press W, E, R fast.", details:["Switching tools by key is faster."], example:"W move, E rotate, R scale" },
+        { title:"Trick 2", summary:"Use Ctrl+Z often.", details:["Mistakes disappear instantly."], example:"Undo a bad placement." },
+        { title:"Trick 3", summary:"Use Alt to clone objects.", details:["Fast duplication helps speed building."], example:"Duplicate a window." },
+        { title:"Trick 4", summary:"Snap parts to the grid.", details:["Aligned builds look cleaner."], example:"Set snap to 0.25." },
+        { title:"Trick 5", summary:"Search Explorer with Ctrl+F.", details:["Find objects quickly."], example:"Search for 'Door'." },
+        { title:"Trick 6", summary:"Use FindFirstChild first.", details:["Checks without waiting."], example:"workspace:FindFirstChild('Door')" },
+        { title:"Trick 7", summary:"Use WaitForChild when loading.", details:["Pauses until object arrives."], example:"ReplicatedStorage:WaitForChild('RemoteEvent')" },
+        { title:"Trick 8", summary:"Copy with Clone().", details:["Clones keep properties."], example:"local copy = part:Clone()" },
+        { title:"Trick 9", summary:"Tween UI instead of jumping.", details:["Smooth movement looks better."], example:"Tween button size." },
+        { title:"Trick 10", summary:"Use task.wait instead of wait.", details:["Modern and recommended."], example:"task.wait(1)" },
+        { title:"Trick 11", summary:"Print variable values.", details:["Shows exactly what is happening."], example:"print('Coins:', coins)" },
+        { title:"Trick 12", summary:"Use folders for systems.", details:["One folder per system keeps things simple."], example:"Workspace > Doors" },
+        { title:"Trick 13", summary:"Keep UI in StarterGui.", details:["Copies to every player."], example:"Put ScreenGui under StarterGui" },
+        { title:"Trick 14", summary:"Put shared code in modules.", details:["Easy to reuse everywhere."], example:"require(ModuleScript)" },
+        { title:"Trick 15", summary:"Use tags for object groups.", details:["Powerful for larger projects."], example:"CollectionService:AddTag(part, 'Enemy')" },
+        { title:"Trick 16", summary:"Use raycasts for aim checks.", details:["Better than basic touch."], example:"workspace:Raycast(origin, direction)" },
+        { title:"Trick 17", summary:"Use attributes for simple settings.", details:["Great for object state."], example:"part:GetAttribute('Open')" },
+        { title:"Trick 18", summary:"Separate client and server logic.", details:["Keeps game safer and cleaner."], example:"UI on client, coins on server" },
+        { title:"Trick 19", summary:"Name remotes clearly.", details:["Less confusion later."], example:"OpenDoorEvent instead of RemoteEvent1" },
+        { title:"Trick 20", summary:"Build small test rooms first.", details:["Prototype before making the full map."], example:"Make a tiny test place." }
+    ]
+};
+
+['hi', 'es', 'ru', 'fr'].forEach(lang => { 
+    tipsData[lang] = JSON.parse(JSON.stringify(tipsData.en)); 
+    tricksData[lang] = JSON.parse(JSON.stringify(tricksData.en)); 
+});
+
+function buildStudioGrid(){
+    const grid = document.getElementById('studioGrid');
+    grid.innerHTML = '';
+    const localizedData = studioData[currentLang];
+
+    Object.keys(localizedData).forEach(name => {
+        const item = localizedData[name];
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        card.innerHTML = `
+            <h3>${name}</h3>
+            <p>${item.summary}</p>
+            <button>${modalLabels[currentLang].openLesson}</button>
+        `;
+
+        card.querySelector('button').onclick = () => {
+            const speechText = escapeHTML((item.what + " " + item.summary).replace(/'/g, "\\'").replace(/"/g, "&quot;"));
+            document.getElementById('modal').innerHTML = `
+                <div class="modalBox">
+                    <div class="modalHeader">
+                        <h2>${name}</h2>
+                        <div class="modalHeaderControls">
+                            <button class="voiceBtn" title="Listen" onclick="speakText('${speechText}')">🔊</button>
+                            <button class="closeBtn" onclick="closeModal()">×</button>
+                        </div>
+                    </div>
+                    <div class="block">
+                        <h4>What is it?</h4>
+                        <p>${item.what}</p>
+                    </div>
+                    <div class="block">
+                        <h4>Why use it?</h4>
+                        <ul>${item.why.map(w => `<li>${w}</li>`).join('')}</ul>
+                    </div>
+                    <div class="block">
+                        <h4>When to use?</h4>
+                        <p>${item.when}</p>
+                    </div>
+                    <div class="block">
+                        <h4>Tips</h4>
+                        <ul>${item.tips.map(t => `<li>${t}</li>`).join('')}</ul>
+                    </div>
+                    <div class="block">
+                        <h4>Reference / Example</h4>
+                        <pre>${escapeHTML(item.example)}</pre>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal').style.display = 'flex';
+        };
+
+        grid.appendChild(card);
+    });
+}
+
+function buildServiceGrid(){
+    const grid = document.getElementById('serviceGrid');
+    grid.innerHTML = '';
+    const localizedData = serviceData[currentLang];
+
+    Object.keys(localizedData).forEach(serviceName => {
+        const service = localizedData[serviceName];
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        card.innerHTML = `
+            <h3>${serviceName}</h3>
+            <p>${service.summary}</p>
+            <button>${modalLabels[currentLang].openLesson}</button>
+        `;
+
+        card.querySelector('button').onclick = () => {
+            const speechText = escapeHTML((service.what + " " + service.summary).replace(/'/g, "\\'").replace(/"/g, "&quot;"));
+            document.getElementById('modal').innerHTML = `
+                <div class="modalBox">
+                    <div class="modalHeader">
+                        <h2>${serviceName}</h2>
+                        <div class="modalHeaderControls">
+                            <button class="voiceBtn" title="Listen" onclick="speakText('${speechText}')">🔊</button>
+                            <button class="closeBtn" onclick="closeModal()">×</button>
+                        </div>
+                    </div>
+                    <div class="block">
+                        <h4>What is it?</h4>
+                        <p>${service.what}</p>
+                    </div>
+                    <div class="block">
+                        <h4>Why use it?</h4>
+                        <ul>${service.why.map(item => `<li>${item}</li>`).join('')}</ul>
+                    </div>
+                    <div class="block">
+                        <h4>When to use?</h4>
+                        <p>${service.when}</p>
+                    </div>
+                    <div class="block">
+                        <h4>Example Code</h4>
+                        <pre>${escapeHTML(service.example)}</pre>
+                    </div>
+                    <div class="block">
+                        <h4>Code Explained</h4>
+                        <ul>${service.explain.map(item => `<li>${item}</li>`).join('')}</ul>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal').style.display = 'flex';
+        };
+
+        grid.appendChild(card);
+    });
+}
+
+function buildScriptLessonsGrid(){
+    const scriptGrid = document.getElementById('scriptGrid');
+    if(!scriptGrid) return;
+
+    scriptGrid.innerHTML = '';
+
+    const lessons = lessonText[currentLang];
+    const labels  = modalLabels[currentLang];
+
+    lessons.forEach((lesson, i) => {
+        const code = lessonExamples[i];
+        const card = document.createElement('div');
+        card.className = 'card';
+
+        card.innerHTML = `
+            <h3>${lesson.title}</h3>
+            <p>${lesson.desc}</p>
+            <button>${labels.openLesson}</button>
+        `;
+
+        card.querySelector('button').onclick = () => {
+            const speechText = escapeHTML((lesson.desc + " " + lesson.explain.join(" ")).replace(/'/g, "\\'").replace(/"/g, "&quot;"));
+            document.getElementById('modal').innerHTML = `
+                <div class="modalBox">
+                    <div class="modalHeader">
+                        <h2>${lesson.title}</h2>
+                        <div class="modalHeaderControls">
+                            <button class="voiceBtn" title="Listen" onclick="speakText('${speechText}')">🔊</button>
+                            <button class="closeBtn" onclick="closeModal()">×</button>
+                        </div>
+                    </div>
+                    <div class="block">
+                        <h4>${labels.explanation}</h4>
+                        <p>${lesson.desc}</p>
+                    </div>
+                    <div class="block">
+                        <h4>${labels.example}</h4>
+                        <pre>${escapeHTML(code)}</pre>
+                    </div>
+                    <div class="block">
+                        <h4>${labels.explained}</h4>
+                        <ul>${lesson.explain.map(x => `<li>${x}</li>`).join('')}</ul>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal').style.display = 'flex';
+        };
+
+        scriptGrid.appendChild(card);
+    });
+}
+
+function buildTipsTricksGrid(){
+    const labels = modalLabels[currentLang];
+    const tipsGrid = document.getElementById('tipsGrid');
+    const tricksGrid = document.getElementById('tricksGrid');
+    if(!tipsGrid || !tricksGrid) return;
+
+    const locTips = tipsData[currentLang];
+    const locTricks = tricksData[currentLang];
+
+    const makeCard = (item, kind) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+            <h3>${item.title}</h3>
+            <p>${item.summary}</p>
+            <button>${labels.openLesson}</button>
+        `;
+        card.querySelector('button').onclick = () => {
+            const speechText = escapeHTML((item.summary + " " + item.details.join(" ")).replace(/'/g, "\\'").replace(/"/g, "&quot;"));
+            document.getElementById('modal').innerHTML = `
+                <div class="modalBox">
+                    <div class="modalHeader">
+                        <h2>${item.title}</h2>
+                        <div class="modalHeaderControls">
+                            <button class="voiceBtn" title="Listen" onclick="speakText('${speechText}')">🔊</button>
+                            <button class="closeBtn" onclick="closeModal()">×</button>
+                        </div>
+                    </div>
+                    <div class="block">
+                        <h4>${labels.explanation}</h4>
+                        <p>${item.summary}</p>
+                    </div>
+                    <div class="block">
+                        <h4>Details</h4>
+                        <ul>${item.details.map(d => `<li>${d}</li>`).join('')}</ul>
+                    </div>
+                    <div class="block">
+                        <h4>${labels.example}</h4>
+                        <pre>${escapeHTML(item.example)}</pre>
+                    </div>
+                </div>
+            `;
+            document.getElementById('modal').style.display = 'flex';
+        };
+        return card;
+    };
+
+    tipsGrid.innerHTML = '';
+    tricksGrid.innerHTML = '';
+
+    locTips.forEach(item => tipsGrid.appendChild(makeCard(item, 'tip')));
+    locTricks.forEach(item => tricksGrid.appendChild(makeCard(item, 'trick')));
+}
+
+/* =========================
+INITIALIZE & EVENT LISTENERS
+========================= */
+document.getElementById('modal').addEventListener('click', function(e){
+    if(e.target === this) closeModal();
+});
+
+buildStudioGrid();
+buildServiceGrid();
+buildScriptLessonsGrid();
+buildTipsTricksGrid();
+
+</script>
+</body>
+</html>
