@@ -2295,7 +2295,7 @@ buildTipsTricksGrid();
     state.currentUser = key;
     saveAccounts();
     updateNav();
-    renderAccountPage();
+    renderStatusPage();
     renderBeginnerPage();
   }
 
@@ -2303,7 +2303,7 @@ buildTipsTricksGrid();
     state.currentUser = null;
     localStorage.removeItem(CURRENT_KEY);
     updateNav();
-    renderAccountPage();
+    renderStatusPage();
     renderBeginnerPage();
     showPage('home');
   }
@@ -2422,7 +2422,7 @@ buildTipsTricksGrid();
 
   const state = {
     accounts: loadAccounts(),
-    currentUser: normalizeUsername(localStorage.getItem(CURRENT_KEY) || '') || null,
+    currentUser: normalizeUsername(localStorage.getItem(CURRENT_KEY) || 'guest') || 'guest',
     quiz: null,
     activeQuiz: null,
     activeSection: null,
@@ -2454,19 +2454,12 @@ buildTipsTricksGrid();
       advanced.innerHTML = '';
       appRoot.insertBefore(advanced, document.getElementById('modal'));
     }
-    if (!document.getElementById('auth')) {
-      const auth = document.createElement('section');
-      auth.id = 'auth';
-      auth.className = 'page';
-      auth.innerHTML = '';
-      appRoot.insertBefore(auth, document.getElementById('modal'));
-    }
-    if (!document.getElementById('account')) {
-      const account = document.createElement('section');
-      account.id = 'account';
-      account.className = 'page';
-      account.innerHTML = '';
-      appRoot.insertBefore(account, document.getElementById('modal'));
+    if (!document.getElementById('status')) {
+      const status = document.createElement('section');
+      status.id = 'status';
+      status.className = 'page';
+      status.innerHTML = '';
+      appRoot.insertBefore(status, document.getElementById('modal'));
     }
 
     const nav = document.querySelector('.nav');
@@ -2474,9 +2467,7 @@ buildTipsTricksGrid();
       <button onclick="showPage('home')">🏠 Home</button>
       <button onclick="showPage('beginner')">🌱 Beginner</button>
       <button onclick="showPage('advanced')">🚀 Advanced</button>
-      <button onclick="showPage('auth')">🔐 Create Account / Login</button>
-      <button onclick="showPage('account')">👤 Account</button>
-      <button id="logoutBtn" onclick="logoutUser()" style="display:none;">🚪 Log Out</button>
+      <button onclick="showPage('status')">📊 Status</button>
       <select id="langSelect" onchange="onLangChange(this.value)">
         <option value="en">English</option>
         <option value="hi">Hindi</option>
@@ -2506,9 +2497,9 @@ buildTipsTricksGrid();
               <h3>🚀 Advanced Mode</h3>
               <p>50 extra Studio lessons and 50 extra Script lessons with explanation, example, and example breakdown.</p>
             </div>
-            <div class="modeCard" onclick="showPage('auth')">
-              <h3>🔐 Account Page</h3>
-              <p>Create an account or log in if you already have one. Log out anytime from the top bar.</p>
+            <div class="modeCard" onclick="showPage('status')">
+              <h3>📊 Status Page</h3>
+              <p>Check your saved beginner progress on this device.</p>
             </div>
           </div>
         </div>
@@ -2518,8 +2509,7 @@ buildTipsTricksGrid();
     updateNav();
     renderBeginnerPage();
     renderAdvancedPage();
-    renderAuthPage();
-    renderAccountPage();
+    renderStatusPage();
     bindModalClose();
   }
 
@@ -2560,7 +2550,7 @@ buildTipsTricksGrid();
               <div class="statusBadge">Beginner Path</div>
               <h1 style="text-align:left; margin-top:10px;">Complete everything in order</h1>
             </div>
-            <div class="mutedText">${currentUserData() ? `Logged in as <strong>${escapeHTML((currentUserData().displayName || state.currentUser))}</strong>` : 'Log in to save your progress.'}</div>
+            <div class="mutedText">'Your progress is saved on this device.'</div>
           </div>
           <p class="mutedText">Finish each lesson one by one. When you get all three quiz questions right, the next lesson unlocks automatically.</p>
           <div class="progressBox">
@@ -2724,15 +2714,15 @@ buildTipsTricksGrid();
     if (!quiz) return;
     const user = currentUserData();
     if (!user) {
-      alert('Create an account or log in first so your progress can be saved.');
-      showPage('auth');
+      alert('Open Status first so your progress can be saved.');
+      showPage('status');
       return;
     }
     user.progress[quiz.sectionKey] = Math.max(user.progress[quiz.sectionKey], quiz.idx + 1);
     saveAccounts();
     closeModal();
     renderBeginnerPage();
-    renderAccountPage();
+    renderStatusPage();
     updateNav();
   };
 
@@ -2821,137 +2811,8 @@ buildTipsTricksGrid();
     modal.style.display = 'flex';
   }
 
-  function renderAuthPage() {
-    const page = document.getElementById('auth');
-    if (!page) return;
-    const user = currentUserData();
-
-    page.innerHTML = `
-      <div class="authShell top-card">
-        <div class="sectionHead2">
-          <div>
-            <div class="statusBadge">Account</div>
-            <h1 style="text-align:left; margin-top:10px;">Create an account or log in</h1>
-          </div>
-          <div class="mutedText">${user ? `Logged in as <strong>${escapeHTML(user.displayName || state.currentUser)}</strong>` : 'No account active right now.'}</div>
-        </div>
-        <div class="authTabs">
-          <button class="authTab ${state.currentAuthTab === 'signup' ? 'active' : ''}" data-tab="signup">Create Account</button>
-          <button class="authTab ${state.currentAuthTab === 'login' ? 'active' : ''}" data-tab="login">Log In</button>
-        </div>
-
-        <div class="authGrid">
-          <div class="card authForm" id="authFormCard"></div>
-          <div class="card">
-            <h3>Saved progress</h3>
-            <p class="mutedText">Your beginner progress is stored in your account on this browser. Log in with the same username to continue where you left off.</p>
-            <div class="accountSummaryGrid" id="authProgressSummary"></div>
-          </div>
-        </div>
-      </div>
-    `;
-
-    page.querySelectorAll('.authTab').forEach(btn => {
-      btn.onclick = () => {
-        state.currentAuthTab = btn.getAttribute('data-tab');
-        renderAuthPage();
-      };
-    });
-
-    const formCard = document.getElementById('authFormCard');
-    if (state.currentAuthTab === 'login') {
-      formCard.innerHTML = `
-        <h3>Log In</h3>
-        <p class="mutedText">Already have an account? Log in here.</p>
-        <label>Username</label>
-        <input id="loginUser" type="text" placeholder="Enter username">
-        <label>Password</label>
-        <input id="loginPass" type="password" placeholder="Enter password">
-        <button onclick="handleLogin()">Log In</button>
-      `;
-    } else {
-      formCard.innerHTML = `
-        <h3>Create Account</h3>
-        <p class="mutedText">New here? Create your account first. If you already have one, just switch to the log in tab.</p>
-        <label>Username</label>
-        <input id="signupUser" type="text" placeholder="Choose a username">
-        <label>Password</label>
-        <input id="signupPass" type="password" placeholder="Choose a password">
-        <button onclick="handleSignup()">Create Account</button>
-      `;
-    }
-
-    const summary = document.getElementById('authProgressSummary');
-    if (user) {
-      const totals = progressTotal(user.progress);
-      summary.innerHTML = `
-        <div class="miniStat"><span>Account</span><strong>${escapeHTML(user.displayName || state.currentUser)}</strong></div>
-        <div class="miniStat"><span>Beginner progress</span><strong>${totals.percent}%</strong></div>
-        <div class="miniStat"><span>Completed lessons</span><strong>${totals.done}</strong></div>
-        <div class="miniStat"><span>Path</span><strong>Beginner</strong></div>
-      `;
-    } else {
-      summary.innerHTML = `
-        <div class="miniStat"><span>Account</span><strong>Not logged in</strong></div>
-        <div class="miniStat"><span>Progress</span><strong>Locked until login</strong></div>
-        <div class="miniStat"><span>Mode</span><strong>Beginner + Advanced</strong></div>
-        <div class="miniStat"><span>Save</span><strong>Local device</strong></div>
-      `;
-    }
-  }
-
-  window.handleSignup = function () {
-    const username = (document.getElementById('signupUser')?.value || '').trim();
-    const password = (document.getElementById('signupPass')?.value || '').trim();
-    const key = normalizeUsername(username);
-    if (!username || !password) {
-      alert('Please fill in both username and password.');
-      return;
-    }
-    if (!key) {
-      alert('Please choose a valid username.');
-      return;
-    }
-    if (state.accounts[key]) {
-      alert('That username already exists. Please log in instead.');
-      state.currentAuthTab = 'login';
-      renderAuthPage();
-      return;
-    }
-    state.accounts[key] = {
-      password,
-      displayName: username,
-      progress: getDefaultProgress(),
-      createdAt: new Date().toISOString()
-    };
-    state.currentUser = key;
-    saveAccounts();
-    updateNav();
-    renderBeginnerPage();
-    renderAccountPage();
-    showPage('account');
-  };
-
-  window.handleLogin = function () {
-    const username = (document.getElementById('loginUser')?.value || '').trim();
-    const password = (document.getElementById('loginPass')?.value || '').trim();
-    const key = normalizeUsername(username);
-    const record = state.accounts[key];
-    if (!key || !record || record.password !== password) {
-      alert('Wrong username or password.');
-      return;
-    }
-    state.currentUser = key;
-    ensureUserData(record.displayName || username);
-    saveAccounts();
-    updateNav();
-    renderBeginnerPage();
-    renderAccountPage();
-    showPage('account');
-  };
-
-  function renderAccountPage() {
-    const page = document.getElementById('account');
+  function renderStatusPage() {
+    const page = document.getElementById('status');
     if (!page) return;
     const user = currentUserData();
     const progress = user ? progressTotal(user.progress) : { done: 0, max: 0, percent: 0 };
@@ -2962,13 +2823,14 @@ buildTipsTricksGrid();
         <div class="top-card">
           <div class="sectionHead2">
             <div>
-              <div class="statusBadge">Your Account</div>
-              <h1 style="text-align:left; margin-top:10px;">${user ? escapeHTML(user.displayName || state.currentUser) : 'No account logged in'}</h1>
+              <div class="statusBadge">Status</div>
+              <h1 style="text-align:left; margin-top:10px;">Saved progress status</h1>
             </div>
-            ${state.currentUser ? `<button class="logoutBtn" onclick="logoutUser()">Log Out</button>` : `<button class="smallActionBtn" onclick="showPage('auth')">Go to Login</button>`}
+            <div class="mutedText">Your progress is saved locally on this device.</div>
           </div>
 
           <div class="accountSummaryGrid">
+            <div class="miniStat"><span>Status</span><strong>${user ? escapeHTML(user.displayName || state.currentUser) : 'Ready'}</strong></div>
             <div class="miniStat"><span>Beginner progress</span><strong>${progress.percent}%</strong></div>
             <div class="miniStat"><span>Lessons complete</span><strong>${progress.done}/${progress.max || 0}</strong></div>
             <div class="miniStat"><span>Studio</span><strong>${doneBySection.studio || 0}/${beginData.studio.length}</strong></div>
@@ -2978,7 +2840,7 @@ buildTipsTricksGrid();
           </div>
 
           <div class="progressBox" style="margin-top:18px;">
-            <div class="progressLabel"><span>Account progress bar</span><span>${progress.percent}%</span></div>
+            <div class="progressLabel"><span>Status progress bar</span><span>${progress.percent}%</span></div>
             <div class="progressBar"><div class="progressFill" style="width:${progress.percent}%"></div></div>
           </div>
         </div>
@@ -2999,8 +2861,7 @@ buildTipsTricksGrid();
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     const page = document.getElementById(pageId);
     if (page) page.classList.add('active');
-    if (pageId === 'auth') renderAuthPage();
-    if (pageId === 'account') renderAccountPage();
+    if (pageId === 'status') renderStatusPage();
     if (pageId === 'beginner') renderBeginnerPage();
     if (pageId === 'advanced') renderAdvancedPage();
     window.scrollTo(0, 0);
@@ -3012,9 +2873,9 @@ buildTipsTricksGrid();
     injectShell();
     if (state.currentUser) {
       updateNav();
-      showPage('account');
+      showPage('status');
     } else {
-      showPage('auth');
+      showPage('status');
     }
   }
 
