@@ -769,6 +769,153 @@ body.python-active #pythonToggle {
 }
 
 /* =========================================
+   PYTHON ASSISTANCE UI
+========================================= */
+.pythonAssist {
+    padding: 14px 18px 16px;
+    background: rgba(15, 23, 42, 0.75);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+
+body[data-theme="light"] .pythonAssist {
+    background: rgba(255,255,255,0.88);
+    border-bottom: 1px solid var(--line);
+}
+
+.pythonAssistLabel {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    color: var(--text);
+    font-weight: 800;
+    font-size: 0.95rem;
+}
+
+.pythonAssistHint {
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+#pythonAssistEditor {
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border-radius: 16px;
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    background: rgba(2, 6, 23, 0.92);
+    color: #e2e8f0;
+    padding: 14px 15px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.6;
+    outline: none;
+    box-shadow: inset 0 2px 10px rgba(0,0,0,0.35);
+}
+
+body[data-theme="light"] #pythonAssistEditor {
+    background: #f8fafc;
+    color: #0f172a;
+    border-color: #cbd5e1;
+}
+
+#pythonAssistEditor::placeholder {
+    color: #94a3b8;
+}
+
+.pythonSuggestBox {
+    position: relative;
+    margin-top: 10px;
+}
+
+.pythonSuggest {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    background: rgba(17, 24, 39, 0.98);
+    border: 1px solid rgba(56, 189, 248, 0.22);
+    border-radius: 14px;
+    padding: 12px 14px;
+    box-shadow: 0 14px 30px rgba(0,0,0,0.35);
+    z-index: 2;
+}
+
+body[data-theme="light"] .pythonSuggest {
+    background: rgba(255,255,255,0.98);
+    border-color: #cbd5e1;
+}
+
+.pythonSuggest.active {
+    display: block;
+}
+
+.pythonSuggestTop {
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    font-weight: 800;
+    margin-bottom: 6px;
+}
+
+.pythonSuggestMain {
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    color: var(--text);
+    word-break: break-word;
+}
+
+.pythonSuggestMain b {
+    color: var(--accent);
+}
+
+.pythonSuggestFooter {
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--muted);
+}
+
+.pythonAssistActions {
+    margin-top: 10px;
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.pythonAssistBtn {
+    border: none;
+    border-radius: 12px;
+    padding: 10px 14px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: 0.2s ease;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+}
+
+.pythonAssistBtn.secondary {
+    background: rgba(255,255,255,0.06);
+    border: 1px solid rgba(255,255,255,0.1);
+    color: var(--text);
+}
+
+body[data-theme="light"] .pythonAssistBtn.secondary {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+}
+
+.pythonAssistBtn:hover {
+    transform: translateY(-2px);
+}
+
+body.python-active .iframeWrapper {
+    border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* =========================================
    INTRO OVERLAY CSS
 ========================================= */
 #introOverlay {
@@ -906,6 +1053,20 @@ body.python-active #pythonToggle {
     <div class="pythonHeader">
         <span>🐍 Code Workspace</span>
         <button class="closePython" onclick="togglePythonPanel()">×</button>
+    </div>
+    <div class="pythonAssist">
+        <div class="pythonAssistLabel">
+            <span>✨ Python Assistance</span>
+            <span class="pythonAssistHint">Type • Tab to accept</span>
+        </div>
+        <textarea id="pythonAssistEditor" spellcheck="false" placeholder="Type Python here to get suggestions..."></textarea>
+        <div class="pythonSuggestBox">
+            <div id="pythonSuggest" class="pythonSuggest" aria-live="polite"></div>
+        </div>
+        <div class="pythonAssistActions">
+            <button class="pythonAssistBtn" type="button" onclick="copyAssistantCode()">Copy code</button>
+            <button class="pythonAssistBtn secondary" type="button" onclick="clearAssistantCode()">Clear</button>
+        </div>
     </div>
     <div class="iframeWrapper">
         <iframe 
@@ -1110,6 +1271,111 @@ function copyDiscord() {
 ========================================= */
 function togglePythonPanel() {
     document.body.classList.toggle('python-active');
+    const editor = document.getElementById('pythonAssistEditor');
+    if (document.body.classList.contains('python-active') && editor) {
+        setTimeout(() => editor.focus(), 50);
+    }
+}
+
+const pythonSnippets = [
+    { trigger: 'print', insert: 'print()' },
+    { trigger: 'def', insert: 'def function_name():' },
+    { trigger: 'class', insert: 'class ClassName:' },
+    { trigger: 'for', insert: 'for i in range():\n    ' },
+    { trigger: 'while', insert: 'while True:\n    ' },
+    { trigger: 'if', insert: 'if condition:\n    ' },
+    { trigger: 'elif', insert: 'elif condition:\n    ' },
+    { trigger: 'else', insert: 'else:\n    ' },
+    { trigger: 'import', insert: 'import ' },
+    { trigger: 'from', insert: 'from  import ' },
+    { trigger: 'try', insert: 'try:\n    \nexcept Exception as e:\n    print(e)' },
+    { trigger: 'return', insert: 'return ' },
+    { trigger: 'input', insert: 'input()' },
+    { trigger: 'len', insert: 'len()' },
+    { trigger: 'range', insert: 'range()' },
+    { trigger: 'list', insert: 'list()' },
+    { trigger: 'dict', insert: 'dict()' },
+    { trigger: 'str', insert: 'str()' },
+    { trigger: 'int', insert: 'int()' },
+    { trigger: 'float', insert: 'float()' }
+];
+
+let pythonSuggestion = '';
+
+function getLastToken(value) {
+    const match = value.match(/([A-Za-z_][A-Za-z0-9_]*)$/);
+    return match ? match[1] : '';
+}
+
+function updatePythonSuggestion() {
+    const editor = document.getElementById('pythonAssistEditor');
+    const box = document.getElementById('pythonSuggest');
+    if (!editor || !box) return;
+
+    const token = getLastToken(editor.value);
+    if (!token) {
+        pythonSuggestion = '';
+        box.classList.remove('active');
+        box.innerHTML = '';
+        return;
+    }
+
+    const item = pythonSnippets.find(s => s.trigger.startsWith(token) && s.trigger !== token) || pythonSnippets.find(s => s.trigger === token);
+    if (!item) {
+        pythonSuggestion = '';
+        box.classList.remove('active');
+        box.innerHTML = '';
+        return;
+    }
+
+    pythonSuggestion = item.insert;
+    box.classList.add('active');
+    box.innerHTML = '<div class="pythonSuggestTop">Suggestion</div><div class="pythonSuggestMain"><b>' + escapeHTML(item.trigger) + '</b> → ' + escapeHTML(item.insert) + '</div><div class="pythonSuggestFooter">Press Tab to accept</div>';
+}
+
+function acceptPythonSuggestion() {
+    const editor = document.getElementById('pythonAssistEditor');
+    if (!editor || !pythonSuggestion) return false;
+
+    const value = editor.value;
+    const token = getLastToken(value);
+    if (!token) return false;
+
+    const start = value.lastIndexOf(token);
+    if (start < 0) return false;
+
+    const accepted = pythonSuggestion;
+    editor.value = value.slice(0, start) + accepted + value.slice(start + token.length);
+    pythonSuggestion = '';
+    const box = document.getElementById('pythonSuggest');
+    if (box) {
+        box.classList.remove('active');
+        box.innerHTML = '';
+    }
+    editor.focus();
+    editor.selectionStart = editor.selectionEnd = start + accepted.length;
+    return true;
+}
+
+function clearAssistantCode() {
+    const editor = document.getElementById('pythonAssistEditor');
+    const box = document.getElementById('pythonSuggest');
+    if (editor) editor.value = '';
+    if (box) {
+        box.classList.remove('active');
+        box.innerHTML = '';
+    }
+    pythonSuggestion = '';
+}
+
+function copyAssistantCode() {
+    const editor = document.getElementById('pythonAssistEditor');
+    if (!editor) return;
+    navigator.clipboard.writeText(editor.value || '').then(() => {
+        alert('Assistant code copied!');
+    }).catch(() => {
+        alert('Could not copy automatically.');
+    });
 }
 
 function closeIntro() {
@@ -1120,6 +1386,22 @@ function closeIntro() {
         overlay.style.display = 'none';
     }, 350);
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editor = document.getElementById('pythonAssistEditor');
+    if (!editor) return;
+
+    editor.addEventListener('input', updatePythonSuggestion);
+    editor.addEventListener('keyup', updatePythonSuggestion);
+    editor.addEventListener('keydown', function(e) {
+        if (e.key === 'Tab' && pythonSuggestion) {
+            e.preventDefault();
+            acceptPythonSuggestion();
+        }
+    });
+
+    updatePythonSuggestion();
+});
 /* ========================================= */
 
 /* =========================
