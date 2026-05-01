@@ -767,9 +767,137 @@ body.python-active .iframeWrapper {
 body.python-active #pythonToggle {
     left: -100px;
 }
+
+/* =========================================
+   INTRO OVERLAY CSS
+========================================= */
+#introOverlay {
+    position: fixed;
+    inset: 0;
+    background:
+        radial-gradient(circle at top, rgba(56, 189, 248, 0.16), transparent 35%),
+        radial-gradient(circle at bottom right, rgba(147, 51, 234, 0.16), transparent 30%),
+        rgba(2, 6, 23, 0.88);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    z-index: 99999;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    animation: introFadeIn 0.6s ease both;
+    transition: opacity 0.35s ease, transform 0.35s ease;
+}
+
+#introOverlay.hide {
+    opacity: 0;
+    pointer-events: none;
+    transform: scale(1.02);
+}
+
+.intro-box {
+    position: relative;
+    background: linear-gradient(145deg, rgba(17, 24, 39, 0.96), rgba(15, 23, 42, 0.96));
+    padding: 40px;
+    border-radius: 28px;
+    text-align: center;
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    box-shadow:
+        0 0 0 1px rgba(255,255,255,0.03) inset,
+        0 18px 60px rgba(0, 0, 0, 0.45),
+        0 0 45px rgba(56, 189, 248, 0.18);
+    max-width: 90%;
+    width: 460px;
+    overflow: hidden;
+    transform: translateY(24px) scale(0.92);
+    opacity: 0;
+    animation: introPop 0.7s 0.15s forwards cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.intro-box::before {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    background: linear-gradient(135deg, rgba(56, 189, 248, 0.35), rgba(147, 51, 234, 0.25), transparent 70%);
+    filter: blur(18px);
+    opacity: 0.7;
+    z-index: 0;
+    animation: introGlow 3s ease-in-out infinite;
+}
+
+.intro-box > * {
+    position: relative;
+    z-index: 1;
+}
+
+.intro-box h2 {
+    font-size: 30px;
+    margin-bottom: 14px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    text-shadow: none;
+    animation: introTextFloat 2.8s ease-in-out infinite;
+}
+
+.intro-box p {
+    color: var(--muted);
+    margin-bottom: 28px;
+    line-height: 1.7;
+    font-size: 1.05rem;
+}
+
+.intro-btn {
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    color: white;
+    border: none;
+    padding: 14px 34px;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 10px 24px rgba(147, 51, 234, 0.32);
+}
+
+.intro-btn:hover {
+    transform: translateY(-4px) scale(1.05);
+    box-shadow: 0 16px 32px rgba(147, 51, 234, 0.48);
+}
+
+@keyframes introFadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+@keyframes introPop {
+    0% { opacity: 0; transform: translateY(24px) scale(0.92); }
+    100% { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes introGlow {
+    0%, 100% { transform: scale(1); opacity: 0.55; }
+    50% { transform: scale(1.04); opacity: 0.9; }
+}
+
+@keyframes introTextFloat {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-3px); }
+}
+
 </style>
 </head>
 <body data-theme="dark">
+
+
+<div id="introOverlay">
+    <div class="intro-box">
+        <h2>Welcome to Roblox Dev! 🚀</h2>
+        <p>The Ultimate Interactive Guide to Mastering Roblox Studio & Lua Scripting. Get ready to learn!</p>
+        <button class="intro-btn" onclick="closeIntro()">Let's Start Learning</button>
+    </div>
+</div>
+
 
 <div id="pythonOverlay" onclick="togglePythonPanel()"></div>
 <div id="pythonToggle" onclick="togglePythonPanel()">🐍 Run Python</div>
@@ -982,6 +1110,15 @@ function copyDiscord() {
 ========================================= */
 function togglePythonPanel() {
     document.body.classList.toggle('python-active');
+}
+
+function closeIntro() {
+    const overlay = document.getElementById('introOverlay');
+    if (!overlay) return;
+    overlay.classList.add('hide');
+    setTimeout(() => {
+        overlay.style.display = 'none';
+    }, 350);
 }
 /* ========================================= */
 
