@@ -2220,9 +2220,29 @@ buildTipsTricksGrid();
     return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
 
+  function normalizeUsername(username) {
+    return String(username || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  }
+
   function loadAccounts() {
     try {
-      return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+      const raw = JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+      const migrated = {};
+      Object.entries(raw || {}).forEach(([legacyKey, record]) => {
+        if (!record || typeof record !== 'object') return;
+        const displayName = String(record.displayName || legacyKey || '').trim();
+        const key = normalizeUsername(displayName || legacyKey);
+        if (!key) return;
+        if (!migrated[key]) {
+          migrated[key] = {
+            password: String(record.password || ''),
+            displayName: displayName || legacyKey,
+            progress: record.progress || getDefaultProgress(),
+            createdAt: record.createdAt || new Date().toISOString()
+          };
+        }
+      });
+      return migrated;
     } catch {
       return {};
     }
@@ -2250,24 +2270,29 @@ buildTipsTricksGrid();
   }
 
   function ensureUserData(username) {
-    if (!state.accounts[username]) {
-      state.accounts[username] = {
+    const key = normalizeUsername(username);
+    if (!key) return null;
+    if (!state.accounts[key]) {
+      state.accounts[key] = {
         password: '',
+        displayName: String(username || '').trim(),
         progress: getDefaultProgress(),
         createdAt: new Date().toISOString()
       };
     }
-    if (!state.accounts[username].progress) state.accounts[username].progress = getDefaultProgress();
-    return state.accounts[username];
+    if (!state.accounts[key].progress) state.accounts[key].progress = getDefaultProgress();
+    if (!state.accounts[key].displayName) state.accounts[key].displayName = String(username || '').trim() || key;
+    return state.accounts[key];
   }
 
   function currentUserData() {
     if (!state.currentUser) return null;
-    return ensureUserData(state.currentUser);
+    return state.accounts[state.currentUser] || null;
   }
 
   function setCurrentUser(username) {
-    state.currentUser = username || null;
+    const key = username ? normalizeUsername(username) : null;
+    state.currentUser = key;
     saveAccounts();
     updateNav();
     renderAccountPage();
@@ -2397,7 +2422,7 @@ buildTipsTricksGrid();
 
   const state = {
     accounts: loadAccounts(),
-    currentUser: localStorage.getItem(CURRENT_KEY) || null,
+    currentUser: normalizeUsername(localStorage.getItem(CURRENT_KEY) || '') || null,
     quiz: null,
     activeQuiz: null,
     activeSection: null,
@@ -2535,7 +2560,7 @@ buildTipsTricksGrid();
               <div class="statusBadge">Beginner Path</div>
               <h1 style="text-align:left; margin-top:10px;">Complete everything in order</h1>
             </div>
-            <div class="mutedText">${state.currentUser ? `Logged in as <strong>${escapeHTML(state.currentUser)}</strong>` : 'Log in to save your progress.'}</div>
+            <div class="mutedText">${currentUserData() ? `Logged in as <strong>${escapeHTML((currentUserData().displayName || state.currentUser))}</strong>` : 'Log in to save your progress.'}</div>
           </div>
           <p class="mutedText">Finish each lesson one by one. When you get all three quiz questions right, the next lesson unlocks automatically.</p>
           <div class="progressBox">
@@ -2808,7 +2833,7 @@ buildTipsTricksGrid();
             <div class="statusBadge">Account</div>
             <h1 style="text-align:left; margin-top:10px;">Create an account or log in</h1>
           </div>
-          <div class="mutedText">${user ? `Logged in as <strong>${escapeHTML(state.currentUser)}</strong>` : 'No account active right now.'}</div>
+          <div class="mutedText">${user ? `Logged in as <strong>${escapeHTML(user.displayName || state.currentUser)}</strong>` : 'No account active right now.'}</div>
         </div>
         <div class="authTabs">
           <button class="authTab ${state.currentAuthTab === 'signup' ? 'active' : ''}" data-tab="signup">Create Account</button>
@@ -2860,7 +2885,7 @@ buildTipsTricksGrid();
     if (user) {
       const totals = progressTotal(user.progress);
       summary.innerHTML = `
-        <div class="miniStat"><span>Account</span><strong>${escapeHTML(state.currentUser)}</strong></div>
+        <div class="miniStat"><span>Account</span><strong>${escapeHTML(user.displayName || state.currentUser)}</strong></div>
         <div class="miniStat"><span>Beginner progress</span><strong>${totals.percent}%</strong></div>
         <div class="miniStat"><span>Completed lessons</span><strong>${totals.done}</strong></div>
         <div class="miniStat"><span>Path</span><strong>Beginner</strong></div>
@@ -2878,22 +2903,28 @@ buildTipsTricksGrid();
   window.handleSignup = function () {
     const username = (document.getElementById('signupUser')?.value || '').trim();
     const password = (document.getElementById('signupPass')?.value || '').trim();
+    const key = normalizeUsername(username);
     if (!username || !password) {
       alert('Please fill in both username and password.');
       return;
     }
-    if (state.accounts[username]) {
+    if (!key) {
+      alert('Please choose a valid username.');
+      return;
+    }
+    if (state.accounts[key]) {
       alert('That username already exists. Please log in instead.');
       state.currentAuthTab = 'login';
       renderAuthPage();
       return;
     }
-    state.accounts[username] = {
+    state.accounts[key] = {
       password,
+      displayName: username,
       progress: getDefaultProgress(),
       createdAt: new Date().toISOString()
     };
-    state.currentUser = username;
+    state.currentUser = key;
     saveAccounts();
     updateNav();
     renderBeginnerPage();
@@ -2904,13 +2935,14 @@ buildTipsTricksGrid();
   window.handleLogin = function () {
     const username = (document.getElementById('loginUser')?.value || '').trim();
     const password = (document.getElementById('loginPass')?.value || '').trim();
-    const record = state.accounts[username];
-    if (!record || record.password !== password) {
+    const key = normalizeUsername(username);
+    const record = state.accounts[key];
+    if (!key || !record || record.password !== password) {
       alert('Wrong username or password.');
       return;
     }
-    state.currentUser = username;
-    ensureUserData(username);
+    state.currentUser = key;
+    ensureUserData(record.displayName || username);
     saveAccounts();
     updateNav();
     renderBeginnerPage();
@@ -2931,7 +2963,7 @@ buildTipsTricksGrid();
           <div class="sectionHead2">
             <div>
               <div class="statusBadge">Your Account</div>
-              <h1 style="text-align:left; margin-top:10px;">${user ? escapeHTML(state.currentUser) : 'No account logged in'}</h1>
+              <h1 style="text-align:left; margin-top:10px;">${user ? escapeHTML(user.displayName || state.currentUser) : 'No account logged in'}</h1>
             </div>
             ${state.currentUser ? `<button class="logoutBtn" onclick="logoutUser()">Log Out</button>` : `<button class="smallActionBtn" onclick="showPage('auth')">Go to Login</button>`}
           </div>
@@ -2978,9 +3010,11 @@ buildTipsTricksGrid();
 
   function init() {
     injectShell();
-    if (state.currentUser) updateNav();
-    if (!state.currentUser) {
-      // Keep the user on the home page until they choose a path.
+    if (state.currentUser) {
+      updateNav();
+      showPage('account');
+    } else {
+      showPage('auth');
     }
   }
 
