@@ -959,14 +959,7 @@ body.python-active #pythonToggle {
     document.addEventListener('cut', function(e) { e.preventDefault(); });
     document.addEventListener('paste', function(e) { e.preventDefault(); });
 
-    // 4. The "Debugger Trap" - Freezes the browser if they open the console
-    // NOTE TO DEV: Comment out this setInterval block if you need to edit your own code!
-    setInterval(function() {
-        (function() { return false; } ['constructor']('debugger') ['call']());
-        console.clear();
-        console.log("%cSTOP!", "color: red; font-size: 60px; font-weight: bold; text-shadow: 2px 2px 0 #000;");
-        console.log("%cThis is a secured environment. Reverse engineering is prohibited.", "color: white; font-size: 18px; background: black; padding: 5px;");
-    }, 50);
+    // 4. Debugger trap disabled for usability.
 
     // 5. Anti-Drag (Prevents dragging images or text to save them)
     document.addEventListener('dragstart', function(e) {
@@ -1932,5 +1925,1072 @@ buildScriptLessonsGrid();
 buildTipsTricksGrid();
 
 </script>
+
+<script>
+(function () {
+  const USERS_KEY = 'roblox_dev_learning_users_v3';
+  const CURRENT_KEY = 'roblox_dev_learning_current_user_v3';
+
+  const beginnerOrder = ['studio', 'game', 'service', 'script'];
+
+  const beginnerGameLessons = [
+    { title: 'Lesson 1: Game Loop', desc: 'Understand how a Roblox game runs from start to finish.', explain: ['The game keeps running while players are inside it.', 'Scripts, UI, and characters all live inside the game loop.'], example: 'Game starts -> Player joins -> Character loads -> Player plays -> Game updates', exampleExplain: ['The loop begins when the place loads.', 'Everything updates while the server and client are active.'] },
+    { title: 'Lesson 2: Spawn Points', desc: 'Choose where players appear when they join.', explain: ['Spawn points control player entry locations.', 'Great for lobby systems and round-based games.'], example: 'Workspace > SpawnLocation', exampleExplain: ['A SpawnLocation is the default respawn point.', 'Move or duplicate it to control where players start.'] },
+    { title: 'Lesson 3: Teams', desc: 'Split players into groups for rounds or PvP.', explain: ['Teams make match systems easier to build.', 'They help with color-coding and team-only rules.'], example: 'Teams > Red, Blue', exampleExplain: ['Players can be assigned to a team.', 'Team systems are useful for battles, races, and roleplay.'] },
+    { title: 'Lesson 4: Leaderstats', desc: 'Show coins, kills, or points on the scoreboard.', explain: ['Leaderstats are visible to everyone in the server.', 'They are perfect for simple scores and currency.'], example: 'Folder named leaderstats with IntValue coins', exampleExplain: ['The folder must be named leaderstats.', 'Values inside it appear on the player list.'] },
+    { title: 'Lesson 5: Respawn', desc: 'Control what happens when a player dies.', explain: ['Respawn brings the player back into the game.', 'You can change spawn behavior and delay.'], example: 'StarterPlayer > CharacterAutoLoads = true', exampleExplain: ['This lets Roblox handle normal respawning.', 'You can customize it later with scripts.'] },
+    { title: 'Lesson 6: Camera Basics', desc: 'Learn how the player sees the world.', explain: ['Camera settings affect the player view.', 'Used for cutscenes, menus, and custom views.'], example: 'workspace.CurrentCamera.CameraType = Enum.CameraType.Custom', exampleExplain: ['The default camera follows the character.', 'Custom cameras are used for special effects.'] },
+    { title: 'Lesson 7: UI Basics', desc: 'Display buttons, text, and menus.', explain: ['UI makes your game feel polished and clear.', 'Start with simple buttons and labels.'], example: 'StarterGui > ScreenGui > TextButton', exampleExplain: ['ScreenGui is the container for UI.', 'Buttons can run code when clicked.'] },
+    { title: 'Lesson 8: Inventory', desc: 'Store and show items a player owns.', explain: ['Inventories help track tools and rewards.', 'Can be simple folders or full custom menus.'], example: 'Folder > Sword, Shield, Potion', exampleExplain: ['Items can be stored in tables or folders.', 'A custom inventory UI can read those items.'] },
+    { title: 'Lesson 9: Doors', desc: 'Make doors open, close, or unlock.', explain: ['Door systems are a classic beginner project.', 'They teach interaction and simple logic.'], example: 'Click button -> door.tween open', exampleExplain: ['The button can trigger a script.', 'Tweening makes the movement smooth.'] },
+    { title: 'Lesson 10: NPCs', desc: 'Place non-player characters in the world.', explain: ['NPCs can talk, walk, or give quests.', 'They are great for making the world feel alive.'], example: 'Model + Humanoid + scripted behavior', exampleExplain: ['An NPC usually needs a Humanoid.', 'Scripts control what the NPC does.'] },
+    { title: 'Lesson 11: Checkpoints', desc: 'Save player progress inside the map.', explain: ['Checkpoints help players return to a safe spot.', 'Common in obbies and adventure maps.'], example: 'Touched checkpoint -> save last spawn', exampleExplain: ['When the player touches the checkpoint, save the location.', 'Use it to respawn the player later.'] },
+    { title: 'Lesson 12: Round System', desc: 'Start, play, and end game rounds.', explain: ['Rounds keep matches organized.', 'Good for racing, minigames, and combat modes.'], example: 'Lobby -> Round starts -> Round ends -> Lobby', exampleExplain: ['A round system repeats the same flow.', 'Each phase can have a timer and rules.'] }
+  ];
+
+  const advancedStudioTopics = [
+    ['StreamingEnabled Planning', 'Use streaming to load only the map areas players need.', 'workspace.StreamingEnabled = true', ['Streaming reduces memory use.', 'Test map visibility and loading distance.']],
+    ['Collision Groups', 'Separate what can collide with what.', 'PhysicsService:CreateCollisionGroup("Players")', ['Groups help with custom physics.', 'Useful for ghosts, vehicles, and hitboxes.']],
+    ['Pivot Editing', 'Move models from a custom pivot point.', 'Model:PivotTo(CFrame.new())', ['PivotTo is cleaner than old model movement.', 'Great for doors and big machines.']],
+    ['MeshPart Optimization', 'Choose meshes that look good and stay lightweight.', 'MeshPart.RenderFidelity = Enum.RenderFidelity.Precise', ['Too many heavy meshes can lag the game.', 'Keep shapes simple where possible.']],
+    ['SurfaceAppearance', 'Add high-quality materials to mesh parts.', 'surfaceAppearance.Parent = meshPart', ['This is used for PBR-style looks.', 'Try albedo, normal, roughness maps.']],
+    ['ViewportFrames', 'Show 3D objects inside the UI.', 'viewport.CurrentCamera = camera', ['Great for shop previews and inventory icons.', 'You can render models in a fake mini scene.']],
+    ['UI Constraints', 'Keep interface clean on every screen size.', 'uiScale.Scale = 1', ['UI scaling protects your layout on phones and tablets.', 'Use anchors and constraints together.']],
+    ['Animation Events', 'Trigger logic during animations.', 'track:GetMarkerReachedSignal("Hit"):Connect(function() end)', ['Markers sync gameplay with motion.', 'Useful for attacks and cutscenes.']],
+    ['Camera Shake', 'Add impact to explosions and hits.', 'camera.CFrame = camera.CFrame * CFrame.new(math.random(), 0, 0)', ['Small camera shakes make effects feel stronger.', 'Keep shake short to avoid discomfort.']],
+    ['Custom Lighting Presets', 'Save lighting styles for different moods.', 'Lighting.ClockTime = 18', ['One preset can be sunny while another is spooky.', 'Make your game feel different by area.']],
+    ['Post-Processing Stack', 'Use bloom, blur, and color correction together.', 'Instance.new("BloomEffect")', ['Post effects should support the map theme.', 'Too much blur can make gameplay harder.']],
+    ['Terrain Water Planning', 'Shape rivers and lakes with terrain tools.', 'Terrain:FillBlock(CFrame.new(), Vector3.new())', ['Terrain water should fit your gameplay routes.', 'Build with paths in mind.']],
+    ['Spawn Flow', 'Control where players begin and respawn.', 'spawnLocation.Enabled = true', ['Spawn flow matters in lobbies and obbies.', 'You can swap spawn points between rounds.']],
+    ['Package Workflow', 'Use packages for reusable systems.', 'require(script.Parent.Module)', ['Packages make large projects easier to share.', 'Great for teams and repeated systems.']],
+    ['Tool Grip Setup', 'Make held tools sit correctly in a player hand.', 'tool.Grip = CFrame.new()', ['Tool grip settings affect feel and animation.', 'Test the hand position from the player view.']],
+    ['Raycast Debugging', 'Draw and inspect raycasts while testing.', 'workspace:Raycast(origin, direction, params)', ['Raycasts are more accurate than touch checks.', 'Debug the origin and direction first.']],
+    ['Module Architecture', 'Split big systems into smaller modules.', 'local M = {}; return M', ['Modules keep code readable and reusable.', 'Each module should do one job well.']],
+    ['NPC Pathing', 'Help NPCs move around obstacles.', 'PathfindingService:CreatePath()', ['Test path width and height settings.', 'Recompute paths when the world changes.']],
+    ['Attribute Driven Builds', 'Store build settings right on objects.', 'part:SetAttribute("Open", true)', ['Attributes are neat for simple configuration.', 'They are easier than adding many Value objects.']],
+    ['Tag Based Systems', 'Use tags to group objects by purpose.', 'CollectionService:AddTag(part, "Enemy")', ['Tags scale well in larger games.', 'They keep scripts flexible and clean.']],
+    ['Model Cleanup', 'Keep a build organized and performant.', 'for _, obj in ipairs(model:GetDescendants()) do end', ['Remove unused objects before publishing.', 'Cleaner models load and debug faster.']],
+    ['Dynamic Weather', 'Change the sky, fog, and lighting over time.', 'Lighting.Ambient = Color3.fromRGB(80,80,80)', ['Weather helps set the mood.', 'Use timers or zones to switch styles.']],
+    ['Audio Zones', 'Play different sounds in different areas.', 'Sound.RollOffMaxDistance = 80', ['Audio zones make maps feel alive.', 'Tune volume so it is not too loud.']],
+    ['Cutscene Blocking', 'Freeze controls during story moments.', 'player.Character.Humanoid.WalkSpeed = 0', ['Cutscenes should return controls after they end.', 'Keep them short and clear.']],
+    ['Live Testing', 'Build a quick testing workflow.', 'RunService:IsStudio()', ['Testing often catches bugs early.', 'Try each feature one by one.']],
+    ['Performance Budgeting', 'Track how heavy each system is.', 'print("Budget check")', ['Performance budgets stop your game from slowing down.', 'Review the expensive parts first.']],
+    ['Billboard HUD', 'Show floating icons over 3D objects.', 'BillboardGui.Adornee = part', ['Billboard GUIs are useful for labels and markers.', 'Keep them readable at a distance.']],
+    ['Team Systems', 'Assign roles and gameplay rules by team.', 'player.Team = game.Teams.Red', ['Team systems work well for minigames and combat.', 'Always handle team switching safely.']],
+    ['Quest Markers', 'Guide players to objectives.', 'marker.Enabled = true', ['Quest markers help players know what to do next.', 'Use arrows, glow, or text.']],
+    ['Interaction Prompts', 'Use clean prompts instead of messy keybinds.', 'Instance.new("ProximityPrompt")', ['Prompts are friendly for mobile and console.', 'Great for doors and pickup items.']],
+    ['UI Inventory Preview', 'Preview items before the player equips them.', 'viewportFrame.Visible = true', ['Previews help players understand what they own.', 'Combine with rotation and lighting.']],
+    ['Model Parenting', 'Organize models into the correct folders.', 'model.Parent = workspace.Map', ['Good parenting keeps Studio tidy.', 'Use folders to avoid confusion.']],
+    ['Device Testing', 'Check how the game feels on different screens.', 'UserInputService.TouchEnabled', ['Mobile testing is not optional.', 'Many players use phones or tablets.']],
+    ['Final Polish', 'Add the finishing touches before publishing.', 'print("Polished!")', ['Polish includes sound, UI, balance, and cleanup.', 'A small final pass makes a big difference.']]
+  ];
+
+  const advancedScriptTopics = [
+    ['Security Validation', 'Check player data before trusting it.', 'if type(value) ~= "number" then return end', ['Never trust client input blindly.', 'Validate everything on the server.']],
+    ['Remote Rate Limits', 'Stop players from firing remotes too fast.', 'task.wait(0.2)', ['Rate limits reduce spam and exploit abuse.', 'Track time and request count.']],
+    ['Promise Pattern', 'Organize async code more cleanly.', 'local promise = {}', ['Promises help manage loading and waiting.', 'They make chains easier to read.']],
+    ['State Machines', 'Control game modes with clear states.', 'local state = "Lobby"', ['State machines prevent messy if-chains.', 'Each state should have a job.']],
+    ['Module API Design', 'Build modules with clear public functions.', 'function M.Start() end', ['Keep the API simple and predictable.', 'Hide internal details when possible.']],
+    ['Metatable Defaults', 'Give tables fallback values automatically.', 'setmetatable({}, { __index = defaults })', ['Metatables make tables more powerful.', 'Very useful for data systems.']],
+    ['Coroutine Control', 'Pause and resume work on demand.', 'local co = coroutine.create(function() end)', ['Coroutines are useful for advanced flow.', 'They are more manual than task.spawn.']],
+    ['Inventory Sync', 'Keep client and server item lists matching.', 'Remote:FireClient(player, items)', ['Always decide which side owns the truth.', 'Server should usually control the data.']],
+    ['Data Versioning', 'Update old saved data safely.', 'data.version = 2', ['Version checks help old saves survive updates.', 'Write upgrade logic carefully.']],
+    ['Serialization', 'Convert tables into storable text.', 'local text = HttpService:JSONEncode(data)', ['Serialization is useful for saving and sending data.', 'The format must be readable later.']],
+    ['Debounce Manager', 'Centralize cooldown logic.', 'local debounce = false', ['A manager keeps cooldowns consistent.', 'Use separate locks for separate actions.']],
+    ['Event Binders', 'Connect and disconnect many events safely.', 'connection:Disconnect()', ['Cleanup matters in long-running games.', 'Broken connections can pile up fast.']],
+    ['Command Systems', 'Build chat or admin commands.', 'if command == "kick" then end', ['Commands should be easy to extend.', 'Always check permissions first.']],
+    ['AI Behavior Trees', 'Structure NPC choices step by step.', 'local node = "Attack"', ['Behavior trees keep NPC logic organized.', 'Great for complex enemy behavior.']],
+    ['Path Cache', 'Reuse calculated paths when possible.', 'local cachedPath = path', ['Caching can save time on repeated work.', 'Invalidate the cache when the map changes.']],
+    ['Prediction Basics', 'Make movement feel responsive on the client.', 'local predicted = position', ['Prediction hides network delay.', 'Server still needs final authority.']],
+    ['Server Authority', 'Keep important game logic on the server.', 'serverValue = 100', ['Use the server for coins, damage, and rewards.', 'Clients should request, not decide.']],
+    ['Tween Chains', 'Run smooth animations one after another.', 'Tween1.Completed:Connect(function() end)', ['Chaining makes UI and doors feel polished.', 'Use short tweens for better control.']],
+    ['Cleanup Patterns', 'Remove objects and connections when done.', 'maid:DoCleaning()', ['Cleanup prevents memory leaks.', 'Destroy or disconnect unused things.']],
+    ['Localization Tables', 'Translate text with structured tables.', 'local texts = { en = "Play" }', ['Localization keeps your game friendly to more players.', 'Avoid hardcoding one language only.']],
+    ['Save Queue', 'Queue save requests to avoid spam.', 'table.insert(queue, data)', ['Saving too often can be risky.', 'Batch or throttle writes when needed.']],
+    ['Rejoin Flow', 'Restore a player after reconnecting.', 'playerData = loadData(userId)', ['Players hate losing progress.', 'Rejoin flow should be smooth.']],
+    ['NPC Dialogue', 'Show lines and choices in conversation.', 'DialogueEvent:FireClient(player)', ['Dialogue is often UI plus remotes.', 'Keep lines short and readable.']],
+    ['Cutscene Triggers', 'Start scripted scenes from gameplay events.', 'trigger.Touched:Connect(function() end)', ['Use triggers to start scenes at the right time.', 'Make sure scenes can be skipped or exited.']],
+    ['Round Manager', 'Handle game rounds with one controller.', 'local currentRound = 0', ['A single manager keeps rounds consistent.', 'Useful for minigames and team battles.']],
+    ['Time Sync', 'Keep timers aligned across server and client.', 'local now = os.clock()', ['Server time should be the source of truth.', 'Display timers from that value.']],
+    ['Shop System', 'Sell items with clear purchase logic.', 'if balance >= price then end', ['Check balance before giving the item.', 'Keep purchase flow obvious.']],
+    ['Premium Checks', 'Detect special player access safely.', 'local premium = player.MembershipType', ['Use this for bonus rewards or benefits.', 'Do not block core gameplay behind it.']],
+    ['Anti Exploit Basics', 'Spot impossible or suspicious behavior.', 'if speed > maxSpeed then end', ['Watch for extreme values and repeated requests.', 'The server should reject bad data.']],
+    ['Scheduler Tasks', 'Run delayed jobs without clutter.', 'task.delay(5, function() end)', ['Schedulers help with timed events.', 'They keep code readable.']],
+    ['Frame Budget', 'Keep each frame light enough for smooth play.', 'RunService.Heartbeat:Connect(function() end)', ['Avoid too much work every frame.', 'Profile the slowest systems first.']],
+    ['Data Packing', 'Store compact data when saving or sending.', 'local packed = table.concat(list, ",")', ['Packing can save space and time.', 'Unpack carefully when loading.']],
+    ['Analytics Events', 'Track game actions for improvement.', 'AnalyticsService:FireEvent()', ['Analytics helps you see what players do.', 'Use it to improve design.']],
+    ['Hot Reload Mindset', 'Reload modules or settings without a full restart.', 'package.loaded[module] = nil', ['Hot reload speeds up testing.', 'Be careful with shared state.']],
+    ['Camera Controllers', 'Move the camera with a dedicated system.', 'camera.CameraType = Enum.CameraType.Scriptable', ['Camera controllers keep camera logic organized.', 'Great for cutscenes and custom views.']],
+    ['Vehicle Controls', 'Separate steering, power, and braking logic.', 'steer = inputX', ['Vehicle code is easier when split into parts.', 'Test physics carefully.']],
+    ['UI State Manager', 'Keep menus open and closed in one place.', 'local uiState = "Main"', ['State managers prevent UI chaos.', 'Only show one menu at a time.']],
+    ['Quest Log', 'Save active quests and objectives.', 'quests[questId] = "Active"', ['Quest logs help players track progress.', 'Store objective status clearly.']],
+    ['Teleport Flow', 'Move players while keeping their state.', 'TeleportService:Teleport(placeId, player)', ['Teleport flow should preserve data when needed.', 'Handle loading screens and failures.']],
+    ['Retry Logic', 'Try a request again when it fails.', 'for i = 1, 3 do end', ['Retries are useful for saves and network calls.', 'Do not retry forever.']],
+    ['Plugin Script Safety', 'Be careful with code that runs in Studio.', 'if RunService:IsStudio() then end', ['Studio scripts should not leak into live gameplay.', 'Keep plugin tools separate.']],
+    ['Build Hooks', 'Trigger actions when something changes.', 'Changed:Connect(function() end)', ['Hooks help keep systems reactive.', 'Use them sparingly.']],
+    ['Number Formatting', 'Display large numbers neatly.', 'local pretty = tostring(value)', ['Formatting improves UI readability.', 'Short labels are easier to scan.']],
+    ['Final Refactor', 'Clean old code after the feature works.', 'local function clean() end', ['Refactoring makes the project easier to maintain.', 'Do it after the system is stable.']]
+  ];
+
+  function injectStyles() {
+    const style = document.createElement('style');
+    style.textContent = `
+      .top-shell {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .top-card {
+        background: rgba(17, 24, 39, 0.68);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.07);
+        border-radius: 28px;
+        padding: 26px;
+        box-shadow: 0 20px 55px rgba(0,0,0,.25);
+      }
+      body[data-theme="light"] .top-card {
+        background: rgba(255,255,255,.85);
+      }
+      .heroGrid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+        gap: 18px;
+        margin-top: 26px;
+      }
+      .modeCard {
+        cursor: pointer;
+        padding: 22px;
+        border-radius: 24px;
+        border: 1px solid rgba(255,255,255,0.08);
+        background: linear-gradient(180deg, rgba(56,189,248,.08), rgba(147,51,234,.08));
+        transition: transform .25s ease, box-shadow .25s ease;
+      }
+      .modeCard:hover { transform: translateY(-6px); box-shadow: 0 18px 40px rgba(0,0,0,.24); }
+      .modeCard h3 { margin-bottom: 10px; font-size: 22px; }
+      .modeCard p { color: var(--muted); line-height: 1.7; }
+      .sectionWrap { margin: 28px 0 42px; }
+      .sectionHead2 { display:flex; align-items:center; justify-content:space-between; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
+      .sectionTitle { font-size: clamp(24px, 4vw, 34px); font-weight: 900; }
+      .progressBox {
+        margin: 12px 0 18px;
+        padding: 14px 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.04);
+        border: 1px solid rgba(255,255,255,0.06);
+      }
+      body[data-theme="light"] .progressBox { background: #f8fafc; border-color: #dbeafe; }
+      .progressLabel { display:flex; justify-content:space-between; gap: 10px; margin-bottom: 8px; color: var(--muted); font-weight: 700; font-size: 14px; }
+      .progressBar {
+        height: 12px;
+        background: rgba(148,163,184,.2);
+        border-radius: 999px;
+        overflow: hidden;
+      }
+      .progressFill {
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, var(--accent), var(--accent2));
+        width: 0%;
+        transition: width .35s ease;
+      }
+      .lessonCard.locked {
+        opacity: .45;
+        filter: grayscale(.2);
+      }
+      .lessonCard.locked button {
+        cursor: not-allowed;
+      }
+      .statusBadge {
+        display:inline-flex;
+        align-items:center;
+        gap:8px;
+        padding: 7px 12px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: 900;
+        letter-spacing: .6px;
+        text-transform: uppercase;
+        background: rgba(56,189,248,.15);
+        color: var(--accent);
+        border: 1px solid rgba(56,189,248,.25);
+      }
+      .authShell {
+        width: min(900px, 100%);
+        margin: 0 auto;
+        display: grid;
+        gap: 22px;
+      }
+      .authTabs { display:flex; gap: 10px; flex-wrap: wrap; }
+      .authTab {
+        padding: 12px 18px;
+        border-radius: 999px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.04);
+        color: var(--text);
+        cursor: pointer;
+        font-weight: 800;
+      }
+      .authTab.active { background: linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border-color: transparent; }
+      .authGrid {
+        display:grid;
+        grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+        gap: 18px;
+      }
+      .authForm label, .accountFieldLabel {
+        display:block;
+        margin: 10px 0 6px;
+        font-weight: 700;
+        color: var(--muted);
+      }
+      .authForm input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.06);
+        color: var(--text);
+        outline: none;
+      }
+      .authForm button, .logoutBtn, .smallActionBtn {
+        margin-top: 14px;
+        padding: 12px 16px;
+        border: 0;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 900;
+        color: #fff;
+        background: linear-gradient(135deg,var(--accent),var(--accent2));
+      }
+      .mutedText { color: var(--muted); line-height: 1.7; }
+      .quizShell { display:grid; gap: 14px; margin-top: 16px; }
+      .quizQ {
+        padding: 16px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.06);
+      }
+      body[data-theme="light"] .quizQ { background: #f8fafc; border-color:#e2e8f0; }
+      .quizOptions { display:grid; gap: 10px; margin-top: 12px; }
+      .quizOption {
+        padding: 12px 14px;
+        border-radius: 14px;
+        border: 1px solid var(--line);
+        background: rgba(255,255,255,.04);
+        color: var(--text);
+        cursor: pointer;
+        text-align: left;
+        font-weight: 700;
+      }
+      .quizOption.correct { outline: 2px solid #22c55e; }
+      .quizOption.wrong { outline: 2px solid #ef4444; }
+      .quizStatus {
+        padding: 10px 12px;
+        border-radius: 14px;
+        font-weight: 800;
+        background: rgba(56,189,248,.1);
+        border: 1px solid rgba(56,189,248,.15);
+      }
+      .lockedOverlay {
+        display:flex;
+        align-items:center;
+        justify-content:center;
+        height: 100%;
+        min-height: 98px;
+        color: var(--muted);
+        font-weight: 800;
+        text-align:center;
+      }
+      .accountSummaryGrid {
+        display:grid;
+        grid-template-columns: repeat(auto-fit,minmax(220px,1fr));
+        gap: 14px;
+      }
+      .miniStat {
+        padding: 18px;
+        border-radius: 18px;
+        background: rgba(255,255,255,.05);
+        border: 1px solid rgba(255,255,255,.06);
+      }
+      .miniStat strong { display:block; font-size: 1.2rem; margin-top: 6px; }
+      .page.is-hidden { display:none !important; }
+    `;
+    document.head.appendChild(style);
+  }
+
+  function slugify(text) {
+    return String(text).toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+  }
+
+  function loadAccounts() {
+    try {
+      return JSON.parse(localStorage.getItem(USERS_KEY) || '{}');
+    } catch {
+      return {};
+    }
+  }
+
+  function saveAccounts() {
+    localStorage.setItem(USERS_KEY, JSON.stringify(state.accounts));
+    localStorage.setItem(CURRENT_KEY, state.currentUser || '');
+  }
+
+  function getDefaultProgress() {
+    return { studio: 0, game: 0, service: 0, script: 0 };
+  }
+
+  function progressTotal(progress) {
+    const totals = {
+      studio: beginData.studio.length,
+      game: beginData.game.length,
+      service: beginData.service.length,
+      script: beginData.script.length
+    };
+    const done = beginnerOrder.reduce((sum, key) => sum + (progress?.[key] || 0), 0);
+    const max = beginnerOrder.reduce((sum, key) => sum + totals[key], 0);
+    return { done, max, percent: max ? Math.round((done / max) * 100) : 0 };
+  }
+
+  function ensureUserData(username) {
+    if (!state.accounts[username]) {
+      state.accounts[username] = {
+        password: '',
+        progress: getDefaultProgress(),
+        createdAt: new Date().toISOString()
+      };
+    }
+    if (!state.accounts[username].progress) state.accounts[username].progress = getDefaultProgress();
+    return state.accounts[username];
+  }
+
+  function currentUserData() {
+    if (!state.currentUser) return null;
+    return ensureUserData(state.currentUser);
+  }
+
+  function setCurrentUser(username) {
+    state.currentUser = username || null;
+    saveAccounts();
+    updateNav();
+    renderAccountPage();
+    renderBeginnerPage();
+  }
+
+  function logoutUser() {
+    state.currentUser = null;
+    localStorage.removeItem(CURRENT_KEY);
+    updateNav();
+    renderAccountPage();
+    renderBeginnerPage();
+    showPage('home');
+  }
+
+  function makeBeginnerQuizSet(lesson, sectionLessons, idx) {
+    const titlePool = sectionLessons.map(l => l.title);
+    const otherTitles = titlePool.filter(t => t !== lesson.title);
+    const pick = (arr, fallback) => arr.length ? arr[Math.floor(Math.random() * arr.length)] : fallback;
+    const fallbackWrong = [
+      'It teaches advanced monetization systems.',
+      'It is only about 3D art and never code.',
+      'It controls the website theme only.'
+    ];
+    return [
+      {
+        q: 'Which lesson are you studying?',
+        answer: lesson.title,
+        options: [lesson.title, pick(otherTitles, 'Lesson 99: Nothing'), pick(otherTitles, 'Lesson 98: Nothing'), pick(otherTitles, 'Lesson 97: Nothing')]
+      },
+      {
+        q: 'What is the main idea of this lesson?',
+        answer: lesson.desc,
+        options: [lesson.desc, fallbackWrong[(idx + 0) % fallbackWrong.length], fallbackWrong[(idx + 1) % fallbackWrong.length], fallbackWrong[(idx + 2) % fallbackWrong.length]]
+      },
+      {
+        q: 'Which explanation matches the lesson?',
+        answer: lesson.explain?.[0] || lesson.desc,
+        options: [
+          lesson.explain?.[0] || lesson.desc,
+          lesson.explain?.[1] || 'It is unrelated to this topic.',
+          'It is only for advanced scripting.',
+          'It is a random setting with no purpose.'
+        ]
+      }
+    ].map(q => ({ ...q, options: shuffle(q.options) }));
+  }
+
+  function shuffle(arr) {
+    return arr.slice().sort(() => Math.random() - 0.5);
+  }
+
+  function standardizeStudioLessons(obj, lang = 'en') {
+    return Object.entries(obj[lang]).map(([title, item]) => ({
+      title,
+      desc: item.summary,
+      explanation: item.what,
+      example: item.example,
+      exampleExplain: [
+        ...(item.why || []).slice(0, 2),
+        ...(item.tips || []).slice(0, 1)
+      ]
+    }));
+  }
+
+  function standardizeServiceLessons(obj, lang = 'en') {
+    return Object.entries(obj[lang]).map(([title, item]) => ({
+      title,
+      desc: item.summary,
+      explanation: item.what,
+      example: item.example,
+      exampleExplain: item.explain || []
+    }));
+  }
+
+  function standardizeScriptLessons(items, examples) {
+    return items.en.map((item, idx) => ({
+      title: item.title,
+      desc: item.desc,
+      explanation: item.desc,
+      example: examples[idx],
+      exampleExplain: item.explain || []
+    }));
+  }
+
+  function makeAdvancedLesson(topic, desc, example, explain) {
+    return {
+      title: topic,
+      desc,
+      explanation: desc,
+      example,
+      exampleExplain: explain
+    };
+  }
+
+  function buildAdvancedLessons(topicPairs, kind) {
+    const lessons = topicPairs.map(([topic, desc, example, explain]) => makeAdvancedLesson(topic, desc, example, explain));
+    const baseTitle = kind === 'studio' ? 'Advanced Studio' : 'Advanced Script';
+    while (lessons.length < 50) {
+      const n = lessons.length + 1;
+      lessons.push(makeAdvancedLesson(
+        `${baseTitle} Bonus ${n}`,
+        `Extra ${baseTitle.toLowerCase()} topic ${n} to complete the 50-lesson advanced track.`,
+        kind === 'studio'
+          ? `Workspace > BonusFolder${n} > ExamplePart${n}`
+          : `local example${n} = ${n}\nprint(example${n})`,
+        [
+          `This fallback lesson keeps the advanced track at 50 lessons.`,
+          `Use it as a template for adding a more specific topic later.`
+        ]
+      ));
+    }
+    return lessons.slice(0, 50);
+  }
+
+  const beginData = {
+    studio: standardizeStudioLessons(studioData, 'en'),
+    game: beginnerGameLessons,
+    service: standardizeServiceLessons(serviceData, 'en'),
+    script: standardizeScriptLessons(lessonText, lessonExamples)
+  };
+
+  const advancedData = {
+    studio: buildAdvancedLessons(advancedStudioTopics, 'studio'),
+    script: buildAdvancedLessons(advancedScriptTopics, 'script')
+  };
+
+  const state = {
+    accounts: loadAccounts(),
+    currentUser: localStorage.getItem(CURRENT_KEY) || null,
+    quiz: null,
+    activeQuiz: null,
+    activeSection: null,
+    activeLessonIndex: null,
+    activeQuizIndex: 0,
+    currentAuthTab: 'signup'
+  };
+
+  if (state.currentUser) ensureUserData(state.currentUser);
+
+  function injectShell() {
+    const appRoot = document.body;
+    const oldStyle = document.getElementById('app-runtime-style');
+    if (oldStyle) oldStyle.remove();
+    injectStyles();
+
+    // Create the extra pages if they do not exist.
+    if (!document.getElementById('beginner')) {
+      const beginner = document.createElement('section');
+      beginner.id = 'beginner';
+      beginner.className = 'page';
+      beginner.innerHTML = '';
+      appRoot.insertBefore(beginner, document.getElementById('modal'));
+    }
+    if (!document.getElementById('advanced')) {
+      const advanced = document.createElement('section');
+      advanced.id = 'advanced';
+      advanced.className = 'page';
+      advanced.innerHTML = '';
+      appRoot.insertBefore(advanced, document.getElementById('modal'));
+    }
+    if (!document.getElementById('auth')) {
+      const auth = document.createElement('section');
+      auth.id = 'auth';
+      auth.className = 'page';
+      auth.innerHTML = '';
+      appRoot.insertBefore(auth, document.getElementById('modal'));
+    }
+    if (!document.getElementById('account')) {
+      const account = document.createElement('section');
+      account.id = 'account';
+      account.className = 'page';
+      account.innerHTML = '';
+      appRoot.insertBefore(account, document.getElementById('modal'));
+    }
+
+    const nav = document.querySelector('.nav');
+    nav.innerHTML = `
+      <button onclick="showPage('home')">🏠 Home</button>
+      <button onclick="showPage('beginner')">🌱 Beginner</button>
+      <button onclick="showPage('advanced')">🚀 Advanced</button>
+      <button onclick="showPage('auth')">🔐 Create Account / Login</button>
+      <button onclick="showPage('account')">👤 Account</button>
+      <button id="logoutBtn" onclick="logoutUser()" style="display:none;">🚪 Log Out</button>
+      <select id="langSelect" onchange="onLangChange(this.value)">
+        <option value="en">English</option>
+        <option value="hi">Hindi</option>
+        <option value="es">Spanish</option>
+        <option value="ru">Russian</option>
+        <option value="fr">French</option>
+      </select>
+      <button onclick="toggleTheme()">🎨 Theme</button>
+    `;
+
+    const home = document.getElementById('home');
+    home.innerHTML = `
+      <div class="hero">
+        <div class="heroBox top-card top-shell">
+          <h1>🎮 Roblox Dev Learning</h1>
+          <h2>The Ultimate Learning Path for Roblox Studio + Lua</h2>
+          <p>
+            Pick a path, create an account, and keep your progress saved on this device. Beginner lessons stay locked until you finish them in order. Advanced lessons stay open for free exploration.
+          </p>
+
+          <div class="heroGrid">
+            <div class="modeCard" onclick="showPage('beginner')">
+              <h3>🌱 Beginner Mode</h3>
+              <p>Step-by-step lessons with quizzes, locked progression, and saved progress for Studio, Game, Get Service, and Script.</p>
+            </div>
+            <div class="modeCard" onclick="showPage('advanced')">
+              <h3>🚀 Advanced Mode</h3>
+              <p>50 extra Studio lessons and 50 extra Script lessons with explanation, example, and example breakdown.</p>
+            </div>
+            <div class="modeCard" onclick="showPage('auth')">
+              <h3>🔐 Account Page</h3>
+              <p>Create an account or log in if you already have one. Log out anytime from the top bar.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    updateNav();
+    renderBeginnerPage();
+    renderAdvancedPage();
+    renderAuthPage();
+    renderAccountPage();
+    bindModalClose();
+  }
+
+  function updateNav() {
+    const logout = document.getElementById('logoutBtn');
+    if (logout) logout.style.display = state.currentUser ? 'inline-flex' : 'none';
+  }
+
+  function getBeginnerSections() {
+    return [
+      { key: 'studio', title: '🛠 Studio Guide', subtitle: 'Learn the Roblox Studio workspace in order.', lessons: beginData.studio },
+      { key: 'game', title: '🎮 Game Guide', subtitle: 'Build the basic game structure step by step.', lessons: beginData.game },
+      { key: 'service', title: '🔥 GetService Guide', subtitle: 'Master the most used game:GetService() tools.', lessons: beginData.service },
+      { key: 'script', title: '💻 Script Guide', subtitle: 'Learn Lua and scripting logic one lesson at a time.', lessons: beginData.script }
+    ];
+  }
+
+  function sectionProgress(sectionKey) {
+    const user = currentUserData();
+    const progress = user?.progress || getDefaultProgress();
+    const total = beginData[sectionKey].length;
+    const done = progress[sectionKey] || 0;
+    return { done, total, percent: total ? Math.round((done / total) * 100) : 0 };
+  }
+
+  function renderBeginnerPage() {
+    const page = document.getElementById('beginner');
+    if (!page) return;
+    const user = currentUserData();
+    const all = progressTotal(user?.progress || getDefaultProgress());
+    const sections = getBeginnerSections();
+
+    page.innerHTML = `
+      <div class="top-shell">
+        <div class="top-card">
+          <div class="sectionHead2">
+            <div>
+              <div class="statusBadge">Beginner Path</div>
+              <h1 style="text-align:left; margin-top:10px;">Complete everything in order</h1>
+            </div>
+            <div class="mutedText">${state.currentUser ? `Logged in as <strong>${escapeHTML(state.currentUser)}</strong>` : 'Log in to save your progress.'}</div>
+          </div>
+          <p class="mutedText">Finish each lesson one by one. When you get all three quiz questions right, the next lesson unlocks automatically.</p>
+          <div class="progressBox">
+            <div class="progressLabel">
+              <span>Overall beginner progress</span>
+              <span>${all.done}/${all.max} lessons completed</span>
+            </div>
+            <div class="progressBar"><div class="progressFill" style="width:${all.percent}%"></div></div>
+          </div>
+        </div>
+
+        ${sections.map(section => {
+          const p = sectionProgress(section.key);
+          const secId = `beginner-${section.key}`;
+          return `
+            <div class="sectionWrap top-card">
+              <div class="sectionHead2">
+                <div>
+                  <h2 class="sectionTitle">${section.title}</h2>
+                  <p class="mutedText">${section.subtitle}</p>
+                </div>
+                <div class="statusBadge">${p.done}/${p.total} Done</div>
+              </div>
+              <div class="progressBox">
+                <div class="progressLabel"><span>Progress</span><span>${p.percent}%</span></div>
+                <div class="progressBar"><div class="progressFill" id="${secId}-fill" style="width:${p.percent}%"></div></div>
+              </div>
+              <div class="grid" id="${secId}-grid"></div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+
+    sections.forEach(section => renderBeginnerGrid(section.key));
+  }
+
+  function renderBeginnerGrid(sectionKey) {
+    const grid = document.getElementById(`beginner-${sectionKey}-grid`);
+    if (!grid) return;
+    const user = currentUserData();
+    const progress = user?.progress || getDefaultProgress();
+    const done = progress[sectionKey] || 0;
+    const lessons = beginData[sectionKey];
+    grid.innerHTML = '';
+    lessons.forEach((lesson, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card lessonCard' + (idx >= done ? (idx === done ? '' : ' locked') : '');
+      card.innerHTML = `
+        <div class="statusBadge">${idx < done ? 'Completed' : idx === done ? 'Next up' : 'Locked'}</div>
+        <h3 style="margin-top:10px;">${lesson.title}</h3>
+        <p>${lesson.desc}</p>
+        <button>${idx <= done ? 'Study Lesson' : 'Locked'}</button>
+      `;
+      const btn = card.querySelector('button');
+      btn.onclick = () => {
+        if (idx > done) {
+          alert('Finish the previous lesson first.');
+          return;
+        }
+        openBeginnerLesson(sectionKey, idx, lesson);
+      };
+      if (idx > done) {
+        btn.disabled = true;
+      }
+      grid.appendChild(card);
+    });
+  }
+
+  function openBeginnerLesson(sectionKey, idx, lesson) {
+    state.activeSection = sectionKey;
+    state.activeLessonIndex = idx;
+    state.activeQuizIndex = 0;
+    const sectionLessons = beginData[sectionKey];
+    const quizzes = makeBeginnerQuizSet(lesson, sectionLessons, idx);
+    state.activeQuiz = {
+      sectionKey,
+      idx,
+      lesson,
+      quizzes,
+      answers: []
+    };
+
+    const modal = document.getElementById('modal');
+    modal.innerHTML = `
+      <div class="modalBox">
+        <div class="modalHeader">
+          <h2>${lesson.title}</h2>
+          <div class="modalHeaderControls">
+            <button class="voiceBtn" title="Listen" onclick="speakText('${escapeHTML((lesson.explanation + ' ' + lesson.desc).replace(/'/g, "\\'").replace(/"/g, '&quot;'))}')">🔊</button>
+            <button class="closeBtn" onclick="closeModal()">×</button>
+          </div>
+        </div>
+        <div class="block">
+          <h4>Explanation</h4>
+          <p>${escapeHTML(lesson.explanation)}</p>
+        </div>
+        <div class="block">
+          <h4>Example</h4>
+          <pre>${escapeHTML(lesson.example)}</pre>
+        </div>
+        <div class="block">
+          <h4>Example explained</h4>
+          <ul>${(lesson.exampleExplain || []).map(x => `<li>${escapeHTML(x)}</li>`).join('')}</ul>
+        </div>
+        <div class="block">
+          <h4>Quiz Gate</h4>
+          <p class="mutedText">Answer all 3 questions correctly to unlock the next lesson.</p>
+          <div id="quizArea" class="quizShell"></div>
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+    renderQuizQuestion();
+  }
+
+  function renderQuizQuestion() {
+    const area = document.getElementById('quizArea');
+    if (!area || !state.activeQuiz) return;
+    const q = state.activeQuiz.quizzes[state.activeQuizIndex];
+    if (!q) {
+      area.innerHTML = `
+        <div class="quizStatus">Lesson complete! You unlocked the next lesson.</div>
+        <button class="smallActionBtn" onclick="completeCurrentBeginnerLesson()">Complete Lesson</button>
+      `;
+      return;
+    }
+    area.innerHTML = `
+      <div class="quizQ">
+        <div class="statusBadge">Quiz ${state.activeQuizIndex + 1} / 3</div>
+        <h3 style="margin-top:10px;">${q.q}</h3>
+        <div class="quizOptions">
+          ${q.options.map((opt, i) => `<button class="quizOption" data-opt="${escapeHTML(opt)}">${String.fromCharCode(65 + i)}. ${escapeHTML(opt)}</button>`).join('')}
+        </div>
+        <div id="quizStatus" class="quizStatus" style="display:none;"></div>
+      </div>
+    `;
+    area.querySelectorAll('.quizOption').forEach(btn => {
+      btn.onclick = () => handleQuizAnswer(btn.getAttribute('data-opt'), q.answer, btn);
+    });
+  }
+
+  function handleQuizAnswer(selected, answer, btn) {
+    const status = document.getElementById('quizStatus');
+    const buttons = [...document.querySelectorAll('.quizOption')];
+    if (selected === answer) {
+      btn.classList.add('correct');
+      status.style.display = 'block';
+      status.textContent = 'Correct!';
+      state.activeQuizIndex += 1;
+      setTimeout(renderQuizQuestion, 500);
+    } else {
+      btn.classList.add('wrong');
+      status.style.display = 'block';
+      status.textContent = 'Not quite. Try again.';
+    }
+  }
+
+  window.completeCurrentBeginnerLesson = function () {
+    const quiz = state.activeQuiz;
+    if (!quiz) return;
+    const user = currentUserData();
+    if (!user) {
+      alert('Create an account or log in first so your progress can be saved.');
+      showPage('auth');
+      return;
+    }
+    user.progress[quiz.sectionKey] = Math.max(user.progress[quiz.sectionKey], quiz.idx + 1);
+    saveAccounts();
+    closeModal();
+    renderBeginnerPage();
+    renderAccountPage();
+    updateNav();
+  };
+
+  function renderAdvancedPage() {
+    const page = document.getElementById('advanced');
+    if (!page) return;
+
+    page.innerHTML = `
+      <div class="top-shell">
+        <div class="top-card">
+          <div class="statusBadge">Advanced Path</div>
+          <h1 style="text-align:left; margin-top:10px;">50 extra lessons for Studio and Script</h1>
+          <p class="mutedText">These lessons are open learning cards. No quiz gate here — just read, explore, and level up.</p>
+        </div>
+
+        <div class="sectionWrap top-card">
+          <div class="sectionHead2">
+            <div>
+              <h2 class="sectionTitle">🚀 Advanced Studio Guide</h2>
+              <p class="mutedText">50 advanced Studio lessons with explanation, example, and example breakdown.</p>
+            </div>
+            <div class="statusBadge">50 Lessons</div>
+          </div>
+          <div class="grid" id="advanced-studio-grid"></div>
+        </div>
+
+        <div class="sectionWrap top-card">
+          <div class="sectionHead2">
+            <div>
+              <h2 class="sectionTitle">🚀 Advanced Script Guide</h2>
+              <p class="mutedText">50 advanced scripting lessons with explanation, example, and example breakdown.</p>
+            </div>
+            <div class="statusBadge">50 Lessons</div>
+          </div>
+          <div class="grid" id="advanced-script-grid"></div>
+        </div>
+      </div>
+    `;
+
+    renderAdvancedGrid('studio', advancedData.studio, 'advanced-studio-grid');
+    renderAdvancedGrid('script', advancedData.script, 'advanced-script-grid');
+  }
+
+  function renderAdvancedGrid(kind, lessons, gridId) {
+    const grid = document.getElementById(gridId);
+    if (!grid) return;
+    grid.innerHTML = '';
+    lessons.forEach((lesson, idx) => {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML = `
+        <h3>${lesson.title}</h3>
+        <p>${lesson.desc}</p>
+        <button>Study Lesson</button>
+      `;
+      card.querySelector('button').onclick = () => openAdvancedLesson(lesson, idx, kind);
+      grid.appendChild(card);
+    });
+  }
+
+  function openAdvancedLesson(lesson, idx, kind) {
+    const modal = document.getElementById('modal');
+    modal.innerHTML = `
+      <div class="modalBox">
+        <div class="modalHeader">
+          <h2>${lesson.title}</h2>
+          <div class="modalHeaderControls">
+            <button class="voiceBtn" title="Listen" onclick="speakText('${escapeHTML((lesson.explanation + ' ' + lesson.desc).replace(/'/g, "\\'").replace(/"/g, '&quot;'))}')">🔊</button>
+            <button class="closeBtn" onclick="closeModal()">×</button>
+          </div>
+        </div>
+        <div class="block">
+          <h4>Explanation</h4>
+          <p>${escapeHTML(lesson.explanation)}</p>
+        </div>
+        <div class="block">
+          <h4>Example</h4>
+          <pre>${escapeHTML(lesson.example)}</pre>
+        </div>
+        <div class="block">
+          <h4>Example explained</h4>
+          <ul>${(lesson.exampleExplain || []).map(x => `<li>${escapeHTML(x)}</li>`).join('')}</ul>
+        </div>
+      </div>
+    `;
+    modal.style.display = 'flex';
+  }
+
+  function renderAuthPage() {
+    const page = document.getElementById('auth');
+    if (!page) return;
+    const user = currentUserData();
+
+    page.innerHTML = `
+      <div class="authShell top-card">
+        <div class="sectionHead2">
+          <div>
+            <div class="statusBadge">Account</div>
+            <h1 style="text-align:left; margin-top:10px;">Create an account or log in</h1>
+          </div>
+          <div class="mutedText">${user ? `Logged in as <strong>${escapeHTML(state.currentUser)}</strong>` : 'No account active right now.'}</div>
+        </div>
+        <div class="authTabs">
+          <button class="authTab ${state.currentAuthTab === 'signup' ? 'active' : ''}" data-tab="signup">Create Account</button>
+          <button class="authTab ${state.currentAuthTab === 'login' ? 'active' : ''}" data-tab="login">Log In</button>
+        </div>
+
+        <div class="authGrid">
+          <div class="card authForm" id="authFormCard"></div>
+          <div class="card">
+            <h3>Saved progress</h3>
+            <p class="mutedText">Your beginner progress is stored in your account on this browser. Log in with the same username to continue where you left off.</p>
+            <div class="accountSummaryGrid" id="authProgressSummary"></div>
+          </div>
+        </div>
+      </div>
+    `;
+
+    page.querySelectorAll('.authTab').forEach(btn => {
+      btn.onclick = () => {
+        state.currentAuthTab = btn.getAttribute('data-tab');
+        renderAuthPage();
+      };
+    });
+
+    const formCard = document.getElementById('authFormCard');
+    if (state.currentAuthTab === 'login') {
+      formCard.innerHTML = `
+        <h3>Log In</h3>
+        <p class="mutedText">Already have an account? Log in here.</p>
+        <label>Username</label>
+        <input id="loginUser" type="text" placeholder="Enter username">
+        <label>Password</label>
+        <input id="loginPass" type="password" placeholder="Enter password">
+        <button onclick="handleLogin()">Log In</button>
+      `;
+    } else {
+      formCard.innerHTML = `
+        <h3>Create Account</h3>
+        <p class="mutedText">New here? Create your account first. If you already have one, just switch to the log in tab.</p>
+        <label>Username</label>
+        <input id="signupUser" type="text" placeholder="Choose a username">
+        <label>Password</label>
+        <input id="signupPass" type="password" placeholder="Choose a password">
+        <button onclick="handleSignup()">Create Account</button>
+      `;
+    }
+
+    const summary = document.getElementById('authProgressSummary');
+    if (user) {
+      const totals = progressTotal(user.progress);
+      summary.innerHTML = `
+        <div class="miniStat"><span>Account</span><strong>${escapeHTML(state.currentUser)}</strong></div>
+        <div class="miniStat"><span>Beginner progress</span><strong>${totals.percent}%</strong></div>
+        <div class="miniStat"><span>Completed lessons</span><strong>${totals.done}</strong></div>
+        <div class="miniStat"><span>Path</span><strong>Beginner</strong></div>
+      `;
+    } else {
+      summary.innerHTML = `
+        <div class="miniStat"><span>Account</span><strong>Not logged in</strong></div>
+        <div class="miniStat"><span>Progress</span><strong>Locked until login</strong></div>
+        <div class="miniStat"><span>Mode</span><strong>Beginner + Advanced</strong></div>
+        <div class="miniStat"><span>Save</span><strong>Local device</strong></div>
+      `;
+    }
+  }
+
+  window.handleSignup = function () {
+    const username = (document.getElementById('signupUser')?.value || '').trim();
+    const password = (document.getElementById('signupPass')?.value || '').trim();
+    if (!username || !password) {
+      alert('Please fill in both username and password.');
+      return;
+    }
+    if (state.accounts[username]) {
+      alert('That username already exists. Please log in instead.');
+      state.currentAuthTab = 'login';
+      renderAuthPage();
+      return;
+    }
+    state.accounts[username] = {
+      password,
+      progress: getDefaultProgress(),
+      createdAt: new Date().toISOString()
+    };
+    state.currentUser = username;
+    saveAccounts();
+    updateNav();
+    renderBeginnerPage();
+    renderAccountPage();
+    showPage('account');
+  };
+
+  window.handleLogin = function () {
+    const username = (document.getElementById('loginUser')?.value || '').trim();
+    const password = (document.getElementById('loginPass')?.value || '').trim();
+    const record = state.accounts[username];
+    if (!record || record.password !== password) {
+      alert('Wrong username or password.');
+      return;
+    }
+    state.currentUser = username;
+    ensureUserData(username);
+    saveAccounts();
+    updateNav();
+    renderBeginnerPage();
+    renderAccountPage();
+    showPage('account');
+  };
+
+  function renderAccountPage() {
+    const page = document.getElementById('account');
+    if (!page) return;
+    const user = currentUserData();
+    const progress = user ? progressTotal(user.progress) : { done: 0, max: 0, percent: 0 };
+    const doneBySection = user?.progress || getDefaultProgress();
+
+    page.innerHTML = `
+      <div class="top-shell">
+        <div class="top-card">
+          <div class="sectionHead2">
+            <div>
+              <div class="statusBadge">Your Account</div>
+              <h1 style="text-align:left; margin-top:10px;">${user ? escapeHTML(state.currentUser) : 'No account logged in'}</h1>
+            </div>
+            ${state.currentUser ? `<button class="logoutBtn" onclick="logoutUser()">Log Out</button>` : `<button class="smallActionBtn" onclick="showPage('auth')">Go to Login</button>`}
+          </div>
+
+          <div class="accountSummaryGrid">
+            <div class="miniStat"><span>Beginner progress</span><strong>${progress.percent}%</strong></div>
+            <div class="miniStat"><span>Lessons complete</span><strong>${progress.done}/${progress.max || 0}</strong></div>
+            <div class="miniStat"><span>Studio</span><strong>${doneBySection.studio || 0}/${beginData.studio.length}</strong></div>
+            <div class="miniStat"><span>Game</span><strong>${doneBySection.game || 0}/${beginData.game.length}</strong></div>
+            <div class="miniStat"><span>GetService</span><strong>${doneBySection.service || 0}/${beginData.service.length}</strong></div>
+            <div class="miniStat"><span>Script</span><strong>${doneBySection.script || 0}/${beginData.script.length}</strong></div>
+          </div>
+
+          <div class="progressBox" style="margin-top:18px;">
+            <div class="progressLabel"><span>Account progress bar</span><span>${progress.percent}%</span></div>
+            <div class="progressBar"><div class="progressFill" style="width:${progress.percent}%"></div></div>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  function bindModalClose() {
+    const modal = document.getElementById('modal');
+    if (!modal) return;
+    modal.onclick = function (e) {
+      if (e.target === modal) closeModal();
+    };
+  }
+
+  // Override the original page switcher so it works with the new pages too.
+  window.showPage = function (pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    const page = document.getElementById(pageId);
+    if (page) page.classList.add('active');
+    if (pageId === 'auth') renderAuthPage();
+    if (pageId === 'account') renderAccountPage();
+    if (pageId === 'beginner') renderBeginnerPage();
+    if (pageId === 'advanced') renderAdvancedPage();
+    window.scrollTo(0, 0);
+  };
+
+  window.logoutUser = logoutUser;
+
+  function init() {
+    injectShell();
+    if (state.currentUser) updateNav();
+    if (!state.currentUser) {
+      // Keep the user on the home page until they choose a path.
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init, { once: true });
+  } else {
+    init();
+  }
+})();
+</script>
+
 </body>
 </html>
